@@ -152,13 +152,19 @@ button:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
 .confetti i{position:absolute;top:-24px;width:10px;height:16px;border-radius:3px;animation:fall linear forwards}
 @keyframes fall{to{transform:translateY(112vh) rotate(760deg)}}
 
+/* Family sync */
+.pill{flex:none;font-size:.95rem;font-weight:700;padding:4px 12px;border-radius:999px;border:2px solid var(--edge);background:var(--soft)}
+.pill[data-s="ok"],.pill[data-s="idle"]{background:var(--green);color:#fff}
+.pill[data-s="error"]{background:var(--orange);color:#fff}
+.codebox{margin-top:22px;text-align:center;font-size:clamp(1.8rem,9vw,2.6rem);font-weight:700;letter-spacing:.06em;
+  background:var(--card);border:3px solid var(--edge);border-radius:20px;box-shadow:0 5px 0 var(--edge);padding:18px 10px;user-select:all}
 /* Stickers */
 .earned{font-size:1.4rem;font-weight:700;color:var(--orange);margin-top:4px}
 .done .sticker{font-size:6rem}
-.sgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:8px}
+.sgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:8px}
 .slot{aspect-ratio:1;border:3px solid var(--edge);border-radius:16px;background:var(--card);display:grid;place-items:center;
-  font-size:clamp(1.6rem,8vw,2.3rem);position:relative;padding:0;box-shadow:0 3px 0 var(--edge)}
-.slot.empty{border-style:dashed;box-shadow:none;background:transparent;color:var(--muted);font-size:1.3rem;font-weight:700}
+  font-size:clamp(2.4rem,13vw,3.6rem);line-height:1;position:relative;padding:0;box-shadow:0 3px 0 var(--edge)}
+.slot.empty{border-style:dashed;box-shadow:none;background:transparent;color:var(--muted);font-size:1.6rem;font-weight:700}
 .slot .n{position:absolute;top:-9px;right:-9px;background:var(--pink);color:#fff;border:2px solid var(--edge);border-radius:999px;font-size:.72rem;padding:1px 6px;font-weight:700}
 .slot.wig{animation:wig .5s ease}
 @keyframes wig{0%,100%{transform:rotate(0) scale(1)}25%{transform:rotate(-12deg) scale(1.15)}75%{transform:rotate(12deg) scale(1.15)}}
@@ -259,7 +265,8 @@ let S=load(); S.p=S.p||{}; S.levels=S.levels||{}; S.head=!!S.head; S.custom=Arra
 if(S.sfx===undefined) S.sfx=true;
 S.group=S.group||"From school"; S.addType=S.addType||"green";
 S.h=S.h&&typeof S.h==="object"?S.h:{};
-S.stickers=Array.isArray(S.stickers)?S.stickers:[]; // [{e:emoji,t:time}] // history: {id:{g:gotCount,a:againCount,t:lastTime}}
+S.stickers=Array.isArray(S.stickers)?S.stickers:[];
+S.deleted=S.deleted&&typeof S.deleted==="object"?S.deleted:{}; S.resetAt=S.resetAt||0; // [{e:emoji,t:time}] // history: {id:{g:gotCount,a:againCount,t:lastTime}}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 
 // ---------- Items ----------
@@ -452,7 +459,7 @@ let P=null;
 const PAL=["var(--pink)","var(--orange)","var(--green)","var(--blue)","var(--alien)","var(--red)","var(--teal)"];
 
 function home(){
-  P=null; CUR=null;
+  P=null; CUR=null; VIEW=home;
   const n=againList().length;
   app.innerHTML=`
   <h1 class="title">${"Dylan's".split("").map((c,i)=>`<span style="color:${PAL[i%PAL.length]}">${c}</span>`).join("")}<br>Phonics practice</h1>
@@ -486,6 +493,11 @@ function home(){
       <span class="sfx-lb">Sound effects</span>
       <span class="sw-track"><span class="sw-knob"></span></span>
     </button>
+    <button class="sfx-row" id="fam">
+      <span class="sfx-ic" aria-hidden="true">🔗</span>
+      <span class="sfx-lb">Family sync</span>
+      <span class="pill" id="syncpill" data-s="${!S.family?"off":SYNC.state}">${pillText()}</span>
+    </button>
   </div>`;
   app.querySelectorAll("[data-act]").forEach(b=>b.onclick=()=>setup(b.dataset.act));
   const ag=app.querySelector("[data-again]"); if(ag) ag.onclick=()=>start(againList(),"Practise again");
@@ -494,10 +506,12 @@ function home(){
     const b=$("#sfx");b.setAttribute("aria-checked",S.sfx);b.querySelector(".sfx-ic").textContent=S.sfx?"🔊":"🔇"};
   $("#prog").onclick=progressScreen;
   $("#stk").onclick=stickerBook;
+  $("#fam").onclick=familyScreen;
   window.scrollTo(0,0);
 }
 
 function setup(k){
+  VIEW=null;
   const a=ACTS[k], lvls=levelsFor(k);
   let sel=(S.levels[k]||[lvls[0]]).filter(l=>lvls.includes(l));
   if(!sel.length) sel=[lvls[0]];
@@ -521,6 +535,7 @@ function setup(k){
 }
 
 function addScreen(){
+  VIEW=null;
   CUR=null;
   const groups=[...new Set(S.custom.map(c=>c.g))];
   app.innerHTML=`
@@ -558,7 +573,7 @@ function addScreen(){
     if(!cur) return;
     const g=($("#g").value.trim()||"From school").slice(0,40);
     if(S.custom.some(c=>c.t===S.addType&&c.s===cur.s&&c.g===g)){msg.style.color="var(--red)";msg.textContent="Already in that group";return}
-    S.custom.push({t:S.addType,s:cur.s,g}); S.group=g; save(); buildItems(); SFX.added();
+    delete S.deleted[S.addType+"|"+cur.s+"|"+g]; S.custom.push({t:S.addType,s:cur.s,g,at:Date.now()}); queueSync(); S.group=g; save(); buildItems(); SFX.added();
     const word=S.addType==="red"?cur.s:cur.s.replace(/[_ ]/g,"");
     w.value=""; update(); msg.style.color=""; msg.textContent="Added "+word;
     app.querySelector(".saved").innerHTML=savedHTML(); bindDeletes();
@@ -579,7 +594,7 @@ function savedHTML(){
 }
 function bindDeletes(){
   app.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{
-    S.custom.splice(+b.dataset.del,1); save(); buildItems();
+    const c=S.custom[+b.dataset.del]; S.deleted[c.t+"|"+c.s+"|"+c.g]=Date.now(); S.custom.splice(+b.dataset.del,1); save(); buildItems(); queueSync();
     app.querySelector(".saved").innerHTML=savedHTML(); bindDeletes();
   });
 }
@@ -592,7 +607,7 @@ function dayLabel(ts){
 }
 function chip(it,extra){return `<span class="wchip ro ${it.mode}">${esc(wordText(it))}${extra||""}</span>`}
 function stickerBook(){
-  CUR=null;
+  VIEW=stickerBook; CUR=null;
   const c=stickerCounts(), n=Object.keys(c).length;
   app.innerHTML=`
   <div class="bar"><button class="back" id="back">‹ Home</button></div>
@@ -608,7 +623,7 @@ function stickerBook(){
   window.scrollTo(0,0);
 }
 function progressScreen(){
-  CUR=null;
+  VIEW=progressScreen; CUR=null;
   const again=againList();
   const hist=Object.entries(S.h).filter(([id])=>ALL[id]);
   const last=hist.reduce((m,[,h])=>Math.max(m,h.t||0),0);
@@ -651,7 +666,7 @@ function progressScreen(){
   <div class="foot"><button class="link" id="reset">Reset progress</button></div>`;
   $("#back").onclick=home;
   const pr=$("#practise"); if(pr) pr.onclick=()=>start(again,"Practise again");
-  $("#reset").onclick=()=>{if(confirm("Clear all progress and history? Your added words stay.")){S.p={};S.h={};save();progressScreen()}};
+  $("#reset").onclick=()=>{if(confirm("Clear all progress and history? Your added words stay.")){S.p={};S.h={};S.resetAt=Date.now();save();queueSync();progressScreen()}};
   window.scrollTo(0,0);
 }
 
@@ -762,13 +777,132 @@ function finish(){
       <button class="ghost" id="home">Home</button>
     </div>
   </div>`;
-  SFX.done(); confetti();
+  SFX.done(); confetti(); queueSync();
   const bk=$("#book"); if(bk) bk.onclick=stickerBook;
   const rt=$("#retry"); if(rt) rt.onclick=()=>start(P.again,P.label);
   const mo=$("#more"); if(mo) mo.onclick=nextBatch;
   $("#home").onclick=home;
   window.scrollTo(0,0);
 }
+
+// ---------- Family sync (Supabase) ----------
+const SB_URL="https://auxgkypuiiqvujbacbvy.supabase.co";
+const SB_KEY="sb_publishable_NmopGRSY8WU82P_ciex-_g_lO0aD2LQ";
+const SYNC_KEYS=["custom","p","h","stickers","deleted","resetAt"];
+const SYNC={state:S.family?"idle":"off"};
+let VIEW=null, syncing=false, syncAgain=false, syncTimer=null;
+
+async function rpc(fn,body){
+  const r=await fetch(SB_URL+"/rest/v1/rpc/"+fn,{method:"POST",
+    headers:{"apikey":SB_KEY,"Content-Type":"application/json"},body:JSON.stringify(body)});
+  if(!r.ok) throw new Error(fn+" "+r.status);
+  const t=await r.text(); return t?JSON.parse(t):null;
+}
+function mergeData(L,R){
+  const out={}, ck=c=>c.t+"|"+c.s+"|"+c.g;
+  const del={...(R.deleted||{})}; for(const k in (L.deleted||{})) del[k]=Math.max(del[k]||0,L.deleted[k]);
+  const cm={}; [...(R.custom||[]),...(L.custom||[])].forEach(c=>{const k=ck(c); if(!cm[k]||(c.at||0)>(cm[k].at||0)) cm[k]=c});
+  out.custom=Object.values(cm).filter(c=>!(del[ck(c)]>=(c.at||0))).sort((a,b)=>(a.at||0)-(b.at||0));
+  out.deleted=del;
+  out.resetAt=Math.max(L.resetAt||0,R.resetAt||0);
+  const h={}; for(const src of [R.h||{},L.h||{}]) for(const id in src){const x=src[id]; if(!h[id]||(x.t||0)>(h[id].t||0)) h[id]=x}
+  for(const id in h) if((h[id].t||0)<out.resetAt) delete h[id];
+  out.h=h;
+  const Lp=L.p||{}, Rp=R.p||{}, p={};
+  for(const id of new Set([...Object.keys(Rp),...Object.keys(Lp)])){
+    if(out.resetAt&&!h[id]) continue;
+    const lt=(L.h&&L.h[id]&&L.h[id].t)||0, rt=(R.h&&R.h[id]&&R.h[id].t)||0;
+    const v=(id in Lp&&(lt>=rt||!(id in Rp)))?Lp[id]:Rp[id];
+    if(v) p[id]=v;
+  }
+  out.p=p;
+  const sm={}; [...(R.stickers||[]),...(L.stickers||[])].forEach(x=>sm[x.e+"|"+x.t]=x);
+  out.stickers=Object.values(sm).sort((a,b)=>a.t-b.t);
+  return out;
+}
+async function syncNow(){
+  if(!S.family||!navigator.onLine){updSyncUI();return}
+  if(syncing){syncAgain=true;return}
+  syncing=true; SYNC.state="syncing"; updSyncUI();
+  try{
+    const remote=await rpc("get_family",{p_code:S.family});
+    const local={}; SYNC_KEYS.forEach(k=>local[k]=S[k]);
+    const before=JSON.stringify(local), m=mergeData(local,remote||{});
+    SYNC_KEYS.forEach(k=>S[k]=m[k]); S.lastSync=Date.now(); save();
+    const changed=JSON.stringify(m)!==before;
+    if(changed) buildItems();
+    await rpc("save_family",{p_code:S.family,p_data:m});
+    SYNC.state="ok";
+    if(changed&&!P&&VIEW) VIEW();
+  }catch(e){SYNC.state="error"}
+  syncing=false; updSyncUI();
+  if(syncAgain){syncAgain=false;syncNow()}
+}
+function queueSync(){if(!S.family)return;clearTimeout(syncTimer);syncTimer=setTimeout(syncNow,1200)}
+function pillText(){return !S.family?"Off":SYNC.state==="syncing"?"Syncing…":SYNC.state==="error"?"Not synced":"On"}
+function lastSyncText(){
+  if(SYNC.state==="error") return "Couldn't sync. Check your signal. If it keeps happening, the Supabase project may be paused.";
+  if(!S.lastSync) return "Not synced yet";
+  return "Last synced "+dayLabel(S.lastSync)+" at "+new Date(S.lastSync).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"});
+}
+function updSyncUI(){
+  const pl=$("#syncpill"); if(pl){pl.textContent=pillText();pl.dataset.s=!S.family?"off":SYNC.state}
+  const st=$("#syncstat"); if(st) st.textContent=SYNC.state==="syncing"?"Syncing…":lastSyncText();
+}
+const CODE_ABC="ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+function genCode(){const a=new Uint32Array(12);crypto.getRandomValues(a);return [...a].map(n=>CODE_ABC[n%CODE_ABC.length]).join("")}
+const normCode=c=>c.toUpperCase().replace(/[^A-Z0-9]/g,"");
+const fmtCode=c=>c.match(/.{1,4}/g).join("-");
+
+function familyScreen(){
+  VIEW=familyScreen; CUR=null;
+  if(!S.family){
+    app.innerHTML=`
+    <div class="bar"><button class="back" id="back">‹ Home</button></div>
+    <h1 class="title">Family sync</h1>
+    <p class="hint">Keep added words, progress and stickers the same on both your phones.</p>
+    <h3 class="ghead">First phone</h3>
+    <button class="go" id="create">Start family sync</button>
+    <h3 class="ghead">Already started on another phone?</h3>
+    <input class="inp" id="code" placeholder="XXXX-XXXX-XXXX" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false">
+    <button class="ghost" id="join" style="margin-top:12px">Join with this code</button>
+    <div class="warn" id="fmsg" aria-live="polite"></div>`;
+    $("#back").onclick=home;
+    $("#create").onclick=async()=>{S.family=genCode();save();$("#create").disabled=true;await syncNow();familyScreen()};
+    $("#join").onclick=async()=>{
+      const c=normCode($("#code").value), msg=$("#fmsg");
+      if(c.length!==12){msg.textContent="Codes are 12 letters and numbers";return}
+      msg.style.color="var(--muted)"; msg.textContent="Checking…";
+      try{
+        const r=await rpc("get_family",{p_code:c});
+        if(!r){msg.style.color="";msg.textContent="Code not found. Check it and try again.";return}
+        S.family=c; save(); await syncNow(); familyScreen();
+      }catch(e){msg.style.color="";msg.textContent="Couldn't connect. Check your signal and try again."}
+    };
+  } else {
+    app.innerHTML=`
+    <div class="bar"><button class="back" id="back">‹ Home</button></div>
+    <h1 class="title">Family sync</h1>
+    <p class="hint">On. Enter this code on the other phone to link it.</p>
+    <div class="codebox">${fmtCode(S.family)}</div>
+    <p class="hint" id="syncstat" style="text-align:center;margin-top:10px">${lastSyncText()}</p>
+    <div class="stack" style="margin-top:20px">
+      <button class="go" id="share">Share code</button>
+      <button class="ghost" id="now">Sync now</button>
+    </div>
+    <div class="foot"><button class="link" id="off">Stop syncing on this phone</button></div>`;
+    $("#back").onclick=home;
+    $("#share").onclick=async()=>{
+      const text="Phonics app family code: "+fmtCode(S.family);
+      try{ if(navigator.share) await navigator.share({text}); else {await navigator.clipboard.writeText(fmtCode(S.family)); $("#share").textContent="Copied!"} }catch(e){}
+    };
+    $("#now").onclick=syncNow;
+    $("#off").onclick=()=>{if(confirm("Stop syncing on this phone? Everything stays on this phone, it just stops sharing.")){S.family=null;SYNC.state="off";save();familyScreen()}};
+  }
+}
+window.addEventListener("online",syncNow);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)syncNow()});
+setTimeout(syncNow,600);
 
 home();
 if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))}
