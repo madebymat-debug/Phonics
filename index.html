@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Phonics practice</title>
+<title>Dylan's Phonics practice</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Phonics">
@@ -55,7 +55,7 @@ button:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
 .chip:active,.toggle:active,.seg button:active{transform:translateY(2px);box-shadow:0 1px 0 var(--edge)}
 
 /* Home */
-.title{font-size:2.6rem;line-height:1.05;margin:16px 0 4px;font-weight:700}
+.title{font-size:clamp(1.9rem,8.6vw,2.6rem);line-height:1.05;margin:16px 0 4px;font-weight:700}
 .sub{color:var(--muted);margin:0 0 22px;font-size:1.05rem}
 .acts{display:flex;flex-direction:column;gap:14px}
 .act{display:flex;align-items:center;gap:16px;width:100%;text-align:left;background:var(--c,var(--card));color:#fff;border-radius:22px;padding:14px 16px}
@@ -425,7 +425,7 @@ function home(){
   P=null; CUR=null;
   const n=againList().length;
   app.innerHTML=`
-  <h1 class="title">${"Phonics".split("").map((c,i)=>`<span style="color:${PAL[i%PAL.length]}">${c}</span>`).join("")} practice</h1>
+  <h1 class="title">${"Dylan's".split("").map((c,i)=>`<span style="color:${PAL[i%PAL.length]}">${c}</span>`).join("")}<br>Phonics practice</h1>
   <p class="sub">Read Write Inc. practice for home</p>
   <div class="acts">
     ${Object.entries(ACTS).map(([k,a])=>`
