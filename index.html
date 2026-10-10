@@ -834,14 +834,14 @@ async function syncNow(){
     await rpc("save_family",{p_code:S.family,p_data:m});
     SYNC.state="ok";
     if(changed&&!P&&VIEW) VIEW();
-  }catch(e){SYNC.state="error"}
+  }catch(e){SYNC.state="error"; SYNC.err=String(e&&e.message||e)}
   syncing=false; updSyncUI();
   if(syncAgain){syncAgain=false;syncNow()}
 }
 function queueSync(){if(!S.family)return;clearTimeout(syncTimer);syncTimer=setTimeout(syncNow,1200)}
 function pillText(){return !S.family?"Off":SYNC.state==="syncing"?"Syncing…":SYNC.state==="error"?"Not synced":"On"}
 function lastSyncText(){
-  if(SYNC.state==="error") return "Couldn't sync. Check your signal. If it keeps happening, the Supabase project may be paused.";
+  if(SYNC.state==="error") return "Couldn't sync ("+(SYNC.err||"unknown")+"). Check your signal. If it keeps happening, the Supabase project may be paused.";
   if(!S.lastSync) return "Not synced yet";
   return "Last synced "+dayLabel(S.lastSync)+" at "+new Date(S.lastSync).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"});
 }
@@ -877,7 +877,7 @@ function familyScreen(){
         const r=await rpc("get_family",{p_code:c});
         if(!r){msg.style.color="";msg.textContent="Code not found. Check it and try again.";return}
         S.family=c; save(); await syncNow(); familyScreen();
-      }catch(e){msg.style.color="";msg.textContent="Couldn't connect. Check your signal and try again."}
+      }catch(e){msg.style.color="";msg.textContent="Couldn't connect ("+String(e&&e.message||e)+"). Check your signal and try again."}
     };
   } else {
     app.innerHTML=`
