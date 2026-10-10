@@ -61,7 +61,7 @@ button:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
 .act{display:flex;align-items:center;gap:16px;width:100%;text-align:left;background:var(--c,var(--card));color:#fff;border-radius:22px;padding:14px 16px}
 .act[data-act=sounds]{--c:var(--blue)} .act[data-act=green]{--c:var(--green)}
 .act[data-act=red]{--c:var(--red)} .act[data-act=alien]{--c:var(--alien)}
-.again-row{--c:var(--orange)} #prog{--c:var(--pink)} #addw{--c:var(--teal)}
+.again-row{--c:var(--orange)} #prog{--c:var(--pink)} #stk{--c:#E89A00} #addw{--c:var(--teal)}
 .act .sw{flex:none;width:56px;height:56px;border-radius:16px;display:grid;place-items:center;font-weight:700;
   background:rgba(255,255,255,.24)!important;color:#fff!important}
 .act h2{margin:0;font-size:1.35rem}
@@ -152,6 +152,19 @@ button:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
 .confetti i{position:absolute;top:-24px;width:10px;height:16px;border-radius:3px;animation:fall linear forwards}
 @keyframes fall{to{transform:translateY(112vh) rotate(760deg)}}
 
+/* Stickers */
+.earned{font-size:1.4rem;font-weight:700;color:var(--orange);margin-top:4px}
+.done .sticker{font-size:6rem}
+.sgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:8px}
+.slot{aspect-ratio:1;border:3px solid var(--edge);border-radius:16px;background:var(--card);display:grid;place-items:center;
+  font-size:clamp(1.6rem,8vw,2.3rem);position:relative;padding:0;box-shadow:0 3px 0 var(--edge)}
+.slot.empty{border-style:dashed;box-shadow:none;background:transparent;color:var(--muted);font-size:1.3rem;font-weight:700}
+.slot .n{position:absolute;top:-9px;right:-9px;background:var(--pink);color:#fff;border:2px solid var(--edge);border-radius:999px;font-size:.72rem;padding:1px 6px;font-weight:700}
+.slot.wig{animation:wig .5s ease}
+@keyframes wig{0%,100%{transform:rotate(0) scale(1)}25%{transform:rotate(-12deg) scale(1.15)}75%{transform:rotate(12deg) scale(1.15)}}
+.stage.is-tricky::before{content:"🔁 Tricky one";position:absolute;top:12px;left:14px;font-size:.85rem;font-weight:700;color:var(--muted);
+  background:var(--card);border:2px solid var(--edge);border-radius:999px;padding:2px 10px}
+.m-alien.is-tricky::before{color:var(--ink)}
 /* Add words */
 .seg{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:18px 0 14px}
 .seg button{background:var(--card);border-radius:14px;padding:12px 6px;font-size:1.1rem;font-weight:700}
@@ -245,7 +258,8 @@ function load(){try{const v=JSON.parse(localStorage.getItem(KEY));return v&&type
 let S=load(); S.p=S.p||{}; S.levels=S.levels||{}; S.head=!!S.head; S.custom=Array.isArray(S.custom)?S.custom:[];
 if(S.sfx===undefined) S.sfx=true;
 S.group=S.group||"From school"; S.addType=S.addType||"green";
-S.h=S.h&&typeof S.h==="object"?S.h:{}; // history: {id:{g:gotCount,a:againCount,t:lastTime}}
+S.h=S.h&&typeof S.h==="object"?S.h:{};
+S.stickers=Array.isArray(S.stickers)?S.stickers:[]; // [{e:emoji,t:time}] // history: {id:{g:gotCount,a:againCount,t:lastTime}}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 
 // ---------- Items ----------
@@ -417,6 +431,22 @@ const CHEEKY_SVG=`<svg class="alien-pic" viewBox="0 0 100 100" aria-hidden="true
 <ellipse cx="52" cy="76" rx="5" ry="3.2" fill="#FF8FB8"/></svg>`;
 const CHAR={green:SPROUT_SVG,red:CHEEKY_SVG,alien:ALIEN_SVG};
 
+const STICKERS=["🦖","🦕","🐙","🦄","🐢","🦁","🐯","🐼","🐨","🐸","🦊","🐳","🦈","🐬","🦋","🐝","🐞","🦉","🐧","🦜","🚀","🛸","🌈","⭐","🌙","🪐","☄️","🚒","🚜","🚂","🏎️","🚁","⚽","🏆","🎈","🍦","🍕","🧁","🍓","🍉"];
+function stickerCounts(){const c={};S.stickers.forEach(x=>c[x.e]=(c[x.e]||0)+1);return c}
+function awardSticker(){
+  const c=stickerCounts(), fresh=STICKERS.filter(e=>!c[e]);
+  const pool=fresh.length?fresh:STICKERS, e=pool[Math.floor(Math.random()*pool.length)];
+  S.stickers.push({e,t:Date.now()}); save();
+  return {e,isNew:!c[e]};
+}
+// Tricky items (marked "again later") to slip into a session, preferring ones not seen today
+function pickTricky(mode,exclude,n){
+  const today=new Date(); today.setHours(0,0,0,0);
+  const all=againList().filter(it=>it.mode===mode&&!exclude.has(it.id));
+  const older=all.filter(it=>!(S.h[it.id]&&S.h[it.id].t>=today.getTime()));
+  return shuffle(older.length?older:all).slice(0,n);
+}
+
 // ---------- Screens ----------
 let P=null;
 const PAL=["var(--pink)","var(--orange)","var(--green)","var(--blue)","var(--alien)","var(--red)","var(--teal)"];
@@ -437,6 +467,10 @@ function home(){
         <span class="sw" style="background:var(--mark)">${n}</span>
         <span><h2>Practise again</h2><p>Everything marked "again later"</p></span>
       </button>`:""}
+    <button class="act" id="stk">
+      <span class="sw" style="font-size:1.7rem">${S.stickers.length?S.stickers[S.stickers.length-1].e:"⭐"}</span>
+      <span><h2>Sticker book</h2><p>${Object.keys(stickerCounts()).length} of ${STICKERS.length} collected</p></span>
+    </button>
     <button class="act" id="prog">
       <span class="sw" style="background:var(--green)">✓</span>
       <span><h2>Progress</h2><p>What he's got and what's still tricky</p></span>
@@ -459,6 +493,7 @@ function home(){
   $("#sfx").onclick=()=>{S.sfx=!S.sfx;save();if(S.sfx)SFX.got();
     const b=$("#sfx");b.setAttribute("aria-checked",S.sfx);b.querySelector(".sfx-ic").textContent=S.sfx?"🔊":"🔇"};
   $("#prog").onclick=progressScreen;
+  $("#stk").onclick=stickerBook;
   window.scrollTo(0,0);
 }
 
@@ -556,6 +591,22 @@ function dayLabel(ts){
   return d.toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long"});
 }
 function chip(it,extra){return `<span class="wchip ro ${it.mode}">${esc(wordText(it))}${extra||""}</span>`}
+function stickerBook(){
+  CUR=null;
+  const c=stickerCounts(), n=Object.keys(c).length;
+  app.innerHTML=`
+  <div class="bar"><button class="back" id="back">‹ Home</button></div>
+  <h1 class="title">Sticker book</h1>
+  <p class="sub">${n} of ${STICKERS.length} collected. Finish a game to win a sticker!</p>
+  <div class="sgrid">${STICKERS.map(e=>c[e]
+    ?`<button class="slot" aria-label="sticker">${e}${c[e]>1?`<span class="n">×${c[e]}</span>`:""}</button>`
+    :`<div class="slot empty" aria-hidden="true">?</div>`).join("")}</div>`;
+  $("#back").onclick=home;
+  app.querySelectorAll("button.slot").forEach((b,i)=>b.onclick=()=>{
+    b.classList.remove("wig"); void b.offsetWidth; b.classList.add("wig"); SFX.step(i);
+  });
+  window.scrollTo(0,0);
+}
 function progressScreen(){
   CUR=null;
   const again=againList();
@@ -607,11 +658,20 @@ function progressScreen(){
 function start(items,label){
   items=items.filter((it,i,a)=>a.findIndex(x=>x.id===it.id)===i);
   if(!items.length){home();return}
-  P={pool:shuffle(items),off:0,label,deck:[],i:0,got:[],again:[]};
+  P={pool:shuffle(items),off:0,label,deck:[],i:0,got:[],again:[],trickyIds:new Set(),mix:label!=="Practise again"};
   nextBatch();
 }
 function nextBatch(){
-  P.deck=P.pool.slice(P.off,P.off+SESSION); P.off+=P.deck.length; P.i=0; P.got=[]; P.again=[];
+  let deck=P.pool.slice(P.off,P.off+SESSION);
+  if(P.mix&&deck.length){
+    // mix up to 3 tricky ones from earlier sessions into this batch
+    const extra=pickTricky(deck[0].mode,new Set(deck.map(it=>it.id)),3);
+    deck=deck.slice(0,Math.min(deck.length,SESSION-extra.length));
+    P.off+=deck.length;
+    extra.forEach(it=>P.trickyIds.add(it.id));
+    deck=shuffle([...deck,...extra]);
+  } else P.off+=deck.length;
+  P.deck=deck; P.i=0; P.got=[]; P.again=[];
   card(false);
 }
 
@@ -632,7 +692,7 @@ function card(anim=true){
   app.innerHTML=`
     <div class="bar"><button class="back" id="back">‹ Stop</button><span class="count">${P.i+1} of ${P.deck.length}</span></div>
     <div class="prog"><i style="width:${pct}%"></i></div>
-    <div class="stage m-${it.mode} ${tappable?"tap":""} ${anim?"slide":""}" id="stage" ${tappable?'role="button" tabindex="0" aria-label="Next sound"':""}>${body}</div>
+    <div class="stage m-${it.mode} ${tappable?"tap":""} ${P.trickyIds.has(it.id)?"is-tricky":""} ${anim?"slide":""}" id="stage" ${tappable?'role="button" tabindex="0" aria-label="Next sound"':""}>${body}</div>
     ${tappable?`<div class="tools"><button class="toggle" id="head" aria-pressed="${S.head}">Hide sound buttons</button></div>`:""}
     <div class="marks">
       <button class="mbtn again" id="again">Again later</button>
@@ -688,19 +748,22 @@ function confetti(){
 function finish(){
   CUR=null;
   const more=P.off<P.pool.length, g=P.got.length, a=P.again.length;
+  const st=P.i>=P.deck.length&&P.deck.length?awardSticker():null;
   app.innerHTML=`
   <div class="done">
-    <div class="star" aria-hidden="true">⭐</div>
+    ${st?`<div class="star sticker" aria-hidden="true">${st.e}</div><div class="earned">${st.isNew?"New sticker!":"Another one!"}</div>`:`<div class="star" aria-hidden="true">⭐</div>`}
     <h2>${a===0&&g>0?"Brilliant!":"Well done!"}</h2>
     <p>${g} got it${a?`, ${a} to try again`:""}</p>
     ${a?`<div class="missed">${P.again.map(it=>`<span>${esc(wordText(it))}</span>`).join("")}</div>`:""}
     <div class="stack">
       ${a?`<button class="go" id="retry">Try those ${a} again</button>`:""}
       ${more?`<button class="ghost" id="more">${SESSION} more</button>`:""}
+      ${st?`<button class="ghost" id="book">Sticker book</button>`:""}
       <button class="ghost" id="home">Home</button>
     </div>
   </div>`;
   SFX.done(); confetti();
+  const bk=$("#book"); if(bk) bk.onclick=stickerBook;
   const rt=$("#retry"); if(rt) rt.onclick=()=>start(P.again,P.label);
   const mo=$("#more"); if(mo) mo.onclick=nextBatch;
   $("#home").onclick=home;
