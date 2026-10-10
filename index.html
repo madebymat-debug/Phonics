@@ -67,12 +67,21 @@ button:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
 .act h2{margin:0;font-size:1.35rem}
 .act p{margin:2px 0 0;color:rgba(255,255,255,.92);font-size:.98rem}
 .foot{margin-top:28px;text-align:center}
+.sfx-row{display:flex;align-items:center;gap:12px;width:100%;margin:0 0 14px;padding:14px 16px;
+  background:var(--card);border:3px solid var(--edge);border-radius:18px;box-shadow:0 4px 0 var(--edge);text-align:left}
+.sfx-ic{font-size:1.5rem;width:30px;text-align:center}
+.sfx-lb{flex:1;font-size:1.2rem;font-weight:700}
+.sw-track{flex:none;position:relative;width:64px;height:36px;border-radius:999px;background:var(--soft);border:3px solid var(--edge);transition:background .2s}
+.sw-knob{position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;border:2px solid var(--edge);transition:transform .2s}
+.sfx-row[aria-checked="true"] .sw-track{background:var(--green)}
+.sfx-row[aria-checked="true"] .sw-knob{transform:translateX(28px)}
 .link{background:none;border:0;color:var(--muted);text-decoration:underline;padding:8px}
 
 /* Setup */
 .bar{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px}
 .back{background:none;border:0;font-size:1.1rem;padding:10px 4px;color:var(--ink);font-weight:700}
-.chips{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0 28px}
+.chips{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 6px}
+.ghead{font-size:1rem;color:var(--muted);margin:22px 0 10px;font-weight:700}
 .chip{background:var(--card);border-radius:999px;padding:10px 18px;font-size:1.1rem}
 .chip[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
 .go{width:100%;border-radius:18px;padding:18px;font-size:1.35rem;font-weight:700;color:#fff;background:var(--green)}
@@ -188,17 +197,15 @@ label.f{display:block;color:var(--ink);font-weight:700;font-size:1rem;margin:14p
 // ---------- Content (RWI-aligned) ----------
 const SOUNDS = {
   s1:[["m","map"],["a","ant"],["s","sun"],["d","dog"],["t","top"],["i","ink"],["n","net"],["p","pan"],["g","gap"],["o","on"],["c","cat"],["k","kit"],["u","up"],["b","bat"],["f","fan"],["e","egg"],["l","leg"],["h","hat"],["r","red"],["j","jam"],["v","van"],["y","yes"],["w","web"],["z","zip"],["x","box"]],
-  sf:[["sh","ship"],["th","thin"],["ch","chop"],["qu","quiz"],["ng","ring"],["nk","pink"],["ck","duck"]],
+  sf:[["sh","ship"],["th","thin"],["ch","chop"],["qu","quiz"],["ng","ring"],["nk","pink"],["ck","duck"],["ff","off"],["ll","bell"],["ss","kiss"],["zz","buzz"]],
   s2:[["ay","play"],["ee","tree"],["igh","night"],["ow","snow"],["oo","zoo"],["oo","book"],["ar","car"],["or","fork"],["air","hair"],["ir","bird"],["ou","shout"],["oy","boy"]],
   s3:[["ea","tea"],["oi","coin"],["a-e","cake"],["i-e","time"],["o-e","home"],["u-e","cube"],["aw","yawn"],["are","care"],["ur","burn"],["er","her"],["ow","cow"],["ai","rain"],["oa","boat"],["ew","chew"],["ire","fire"],["ear","hear"],["ure","pure"],["tion","station"]]
 };
 // Words: graphemes separated by spaces; split digraphs written "a_ ... _e"
 const GREEN = {
-  s1:["c a t","d o g","s u n","p i g","h e n","b e d","m a p","t i p","r u n","j a m","f o x","y e s","w e t","z i p","r e d","l o g","h u t","b u s","k i t","w e b","v a n","n u t"],
-  sf:["sh i p","ch i p","th i n","sh o p","f i sh","m u ch","th e n","qu i z","r i ng","s i ng","b a nk","p i nk","d u ck","b a ck","l o ck","ch i ck","th i ck"],
-  adj:["f r o g","s t a m p","c r a b","f l a g","b e s t","h a n d","s p o t","l u n ch","s n a ck","t r u ck","b r i ng","d r i nk","c l a p","s w i m","t e n t"],
-  s2:["p l ay","d ay","s ee","t r ee","g r ee n","n igh t","l igh t","h igh","s n ow","b l ow","z oo","m oo n","l oo k","b oo k","c ar","s t ar","p ar k","f or k","s p or t","f air","h air","g ir l","b ir d","sh ir t","ou t","sh ou t","l ou d","b oy","t oy"],
-  s3:["t ea","b ea ch","c oi n","s p oi l","c a_ k _e","t i_ m _e","h o_ m _e","c u_ b _e","s n a_ k _e","y aw n","c are","b ur n","t ur n","h er","c ow","d ow n","r ai n","b oa t","ch ew","n ew","f ire","h ear","n ear","p ure"]
+  s1:["c a t", "d o g", "s u n", "p i g", "h e n", "b e d", "m a p", "t i p", "r u n", "j a m", "f o x", "y e s", "w e t", "z i p", "r e d", "l o g", "h u t", "b u s", "k i t", "w e b", "v a n", "n u t", "sh i p", "ch i p", "th i n", "sh o p", "f i sh", "m u ch", "th e n", "qu i z", "r i ng", "s i ng", "b a nk", "p i nk", "d u ck", "b a ck", "l o ck", "ch i ck", "th i ck", "f r o g", "s t a m p", "c r a b", "f l a g", "b e s t", "h a n d", "s p o t", "l u n ch", "s n a ck", "t r u ck", "b r i ng", "d r i nk", "c l a p", "s w i m", "t e n t"],
+  s2:["p l ay", "d ay", "s ee", "t r ee", "g r ee n", "n igh t", "l igh t", "h igh", "s n ow", "b l ow", "z oo", "m oo n", "l oo k", "b oo k", "c ar", "s t ar", "p ar k", "f or k", "s p or t", "f air", "h air", "g ir l", "b ir d", "sh ir t", "ou t", "sh ou t", "l ou d", "b oy", "t oy"],
+  s3:["t ea", "b ea ch", "c oi n", "s p oi l", "c a_ k _e", "t i_ m _e", "h o_ m _e", "c u_ b _e", "s n a_ k _e", "y aw n", "c are", "b ur n", "t ur n", "h er", "c ow", "d ow n", "r ai n", "b oa t", "ch ew", "n ew", "f ire", "h ear", "n ear", "p ure"]
 };
 const ALIEN = {
   s1:["v a p","j e x","t i b","f u m","p a b","n i m","y o d","g e k","sh o m","th i p","ch a b","qu e n","v u ng","z e ck","b l i m","s t r o m","f r a n t","c l u p"],
@@ -207,15 +214,26 @@ const ALIEN = {
 };
 const RED = ["the","to","I","no","go","of","said","you","your","my","he","she","we","me","be","was","all","are","what","there","they","her","some","come","one","do","does","were","where","who","could","would","should","any","many","two","school","want","call","small","love","here","once"];
 
-const LEVEL_NAMES = {s1:"Set 1",sf:"Special friends",adj:"Blends",s2:"Set 2",s3:"Set 3",all:"RWI red words"};
+// School words: Ditty, Red Ditty (Set 1) and Green groups
+const SCHOOL = {
+  green:{
+    dt:["sh e d", "th a t", "m a sh", "th e m", "sh u t", "w i th", "th e n", "s u ch", "m o th", "r i ch", "m u ch", "b a nk", "s i nk", "l o ng", "p i nk", "r a ng", "s a nk", "k i ng", "b e ll", "w e ll", "f e ll", "m e ss", "l e ss", "m i ss", "b u zz", "f i zz", "j a zz"],
+    rd:["f r o g", "t r a p", "f l a g", "f r o s t", "t r i p", "f l a t", "f r i ll", "t r u s t", "f l o p", "g r a b", "c r a b", "s t a m p", "g r i p", "c r u n ch", "c r u s t", "s t o p", "b l o b", "s p l i t", "s t r o ng", "b l a ck", "s p o t", "s t r i ng", "b l o ck", "s p r i ng", "s t r a p", "f i zz", "j a zz", "b u zz", "f u zz", "t e ll", "d u ll", "s e ll", "y e ll", "f u ll", "d o ll", "h i ll", "o ff", "s n i ff", "h u ff", "p u ff", "c l i ff", "s t i ff", "m i ss", "h i ss", "g r a ss", "l e ss", "b o ss", "m e ss", "k i ss", "t i ck", "t o ck", "c l o ck", "r o ck", "l i ck", "p i ck", "b a ck", "s n a ck", "n e ck", "s t i ck", "d u ck"],
+    gr:["m u ff i n", "r a ck e t", "a c r o ss", "s t r u ck", "f o ss i l", "b l o ck s", "g r a n d", "s c r u b", "p a s t a", "g r u m p", "h a b i t", "s p e n d", "th a nk", "p a tch", "l e t 's", "c a tch", "ch e ck s", "h u n t s", "g r i n s", "th a nk s", "d ay", "p l ay", "m ay", "w ay", "l ay", "s ay", "t r ay", "s p r ay", "s ee", "th r ee", "b ee n", "g r ee n", "k ee p", "n ee d", "s l ee p", "f ee l", "t oo k", "l oo k", "b oo k", "sh oo k", "c oo k", "f oo t", "t oo", "z oo", "m oo d", "f oo l", "p oo l", "s t oo l", "m oo n", "s p oo n", "b l ow", "s n ow", "l ow", "sh ow", "kn ow", "s l ow"]
+  },
+  alien:{dt:["g e b", "t o b", "f o t", "c u g", "th a b", "ch e d", "qu o b", "z o x"],rd:["th i m", "qu i g", "ch a b", "j a ll", "s t r o n", "s p u s t", "s c r o ck", "s p r o zz"],gr:["v i nk", "p e nk", "c e ck", "qu e ck", "p r i sh", "g l o sh", "f r u sh", "c l i sh", "sh or g", "n e th", "j a th", "th e l p", "z i ck i t", "t r o ck"]},
+  red:{dt:["the", "I", "my", "no"],rd:["put", "for", "of", "he"],gr:["your", "said", "you", "be", "are"]}
+};
+
+const LEVEL_NAMES = {dt:"Ditty",rd:"Red Ditty",gr:"Green",s1:"Set 1",sf:"Special friends",s2:"Set 2",s3:"Set 3",all:"All red words"};
 const ACTS = {
   sounds:{name:"Speed Sounds",desc:"Say the sound on the card",sw:"var(--blue)",icon:"sh",levels:["s1","sf","s2","s3"],
     help:"Show the card. He says the sound, not the letter name."},
-  green:{name:"Green words",desc:"Fred Talk, then read the word",sw:"var(--green)",icon:"cat",levels:["s1","sf","adj","s2","s3"],
+  green:{name:"Green words",desc:"Fred Talk, then read the word",sw:"var(--green)",icon:"cat",school:["dt","rd","gr"],levels:["s1","s2","s3"],
     help:"Tap the word to step through each sound, then tap again to read the whole word. Dots are single sounds, dashes are special friends."},
-  alien:{name:"Nonsense words",desc:"Made-up words, like the June check",sw:"var(--alien)",icon:"zib",levels:["s1","s2","s3"],
+  alien:{name:"Nonsense words",desc:"Made-up words, like the June check",sw:"var(--alien)",icon:"zib",school:["dt","rd","gr"],levels:["s1","s2","s3"],
     help:"Nonsense words, so he has to sound them out rather than guess."},
-  red:{name:"Red words",desc:"Tricky words he just has to know",sw:"var(--red)",icon:"the",levels:["all"],
+  red:{name:"Red words",desc:"Tricky words he just has to know",sw:"var(--red)",icon:"the",school:["dt","rd","gr"],levels:["all"],
     help:"No sounding out. He just needs to know these on sight."}
 };
 const TYPE_NAMES={green:"Green",alien:"Nonsense",red:"Red"};
@@ -239,13 +257,15 @@ function buildItems(){
   for (const lv in GREEN) ITEMS.green[lv]=GREEN[lv].map(s=>add({id:"green:"+s,mode:"green",str:s}));
   for (const lv in ALIEN) ITEMS.alien[lv]=ALIEN[lv].map(s=>add({id:"alien:"+s,mode:"alien",str:s}));
   ITEMS.red.all=RED.map(w=>add({id:"red:"+w,mode:"red",w}));
+  for (const k in SCHOOL) for (const lv in SCHOOL[k])
+    ITEMS[k][lv]=SCHOOL[k][lv].map(x=>add(k==="red"?{id:"red:"+x,mode:"red",w:x}:{id:k+":"+x,mode:k,str:x}));
   S.custom.forEach(c=>{
     const lv="c:"+c.g, it=c.t==="red"?{id:"red:"+c.s,mode:"red",w:c.s}:{id:c.t+":"+c.s,mode:c.t,str:c.s};
     (ITEMS[c.t][lv]=ITEMS[c.t][lv]||[]).push(add(it));
   });
 }
 function levelsFor(k){
-  const base=ACTS[k].levels;
+  const base=[...(ACTS[k].school||[]),...ACTS[k].levels];
   const extra=k==="sounds"?[]:[...new Set(S.custom.filter(c=>c.t===k).map(c=>"c:"+c.g))];
   return [...base,...extra];
 }
@@ -313,7 +333,7 @@ function parse(str){
   str.split(" ").forEach((t,i)=>{
     if(t.endsWith("_")){open=sounds.length;sounds.push([i]);tokens.push({g:t.slice(0,-1),kind:"split"})}
     else if(t.startsWith("_")){sounds[open].push(i);tokens.push({g:t.slice(1),kind:"split"})}
-    else{sounds.push([i]);tokens.push({g:t,kind:t.length>1?"dash":"dot"})}
+    else{sounds.push([i]);tokens.push({g:t,kind:t.replace(/['’]/g,"").length>1?"dash":"dot"})}
   });
   return {tokens,sounds,splits:sounds.filter(s=>s.length===2)};
 }
@@ -427,12 +447,17 @@ function home(){
     </button>
   </div>
   <div class="foot">
-    <button class="link" id="sfx">Sound effects: ${S.sfx?"on":"off"}</button>
+    <button class="sfx-row" id="sfx" role="switch" aria-checked="${S.sfx}">
+      <span class="sfx-ic" aria-hidden="true">${S.sfx?"🔊":"🔇"}</span>
+      <span class="sfx-lb">Sound effects</span>
+      <span class="sw-track"><span class="sw-knob"></span></span>
+    </button>
   </div>`;
   app.querySelectorAll("[data-act]").forEach(b=>b.onclick=()=>setup(b.dataset.act));
   const ag=app.querySelector("[data-again]"); if(ag) ag.onclick=()=>start(againList(),"Practise again");
   $("#addw").onclick=addScreen;
-  $("#sfx").onclick=()=>{S.sfx=!S.sfx;save();if(S.sfx)SFX.got();home()};
+  $("#sfx").onclick=()=>{S.sfx=!S.sfx;save();if(S.sfx)SFX.got();
+    const b=$("#sfx");b.setAttribute("aria-checked",S.sfx);b.querySelector(".sfx-ic").textContent=S.sfx?"🔊":"🔇"};
   $("#prog").onclick=progressScreen;
   window.scrollTo(0,0);
 }
@@ -446,7 +471,10 @@ function setup(k){
     <div class="bar"><button class="back" id="back">‹ Home</button></div>
     <h1 class="title">${a.name}</h1>
     <p class="hint">${a.help}</p>
-    <div class="chips">${lvls.map(l=>`<button class="chip" data-l="${esc(l)}" aria-pressed="${sel.includes(l)}">${esc(levelName(l))}</button>`).join("")}</div>
+    ${[["From school",a.school||[]],[k==="sounds"?"Sound sets":"Extra practice",a.levels],["Your words",lvls.filter(l=>l.startsWith("c:"))]]
+      .filter(([,ls])=>ls.length).map(([h,ls])=>`<h3 class="ghead">${h}</h3>
+      <div class="chips">${ls.map(l=>`<button class="chip" data-l="${esc(l)}" aria-pressed="${sel.includes(l)}">${esc(levelName(l))}</button>`).join("")}</div>`).join("")}
+    <div style="height:14px"></div>
     <button class="go" id="go" ${sel.length?"":"disabled"} style="background:${a.sw}">Start</button>`;
     $("#back").onclick=home;
     app.querySelectorAll(".chip").forEach(c=>c.onclick=()=>{
@@ -577,6 +605,7 @@ function progressScreen(){
 }
 
 function start(items,label){
+  items=items.filter((it,i,a)=>a.findIndex(x=>x.id===it.id)===i);
   if(!items.length){home();return}
   P={pool:shuffle(items),off:0,label,deck:[],i:0,got:[],again:[]};
   nextBatch();
