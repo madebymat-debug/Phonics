@@ -118,7 +118,7 @@ button:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
 .word.blend .l{text-decoration:underline;text-decoration-thickness:.06em;text-underline-offset:.12em}
 .alien-pic{width:84px;height:84px;margin-bottom:6px;animation:bob 2.6s ease-in-out infinite}
 @keyframes bob{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-12px) rotate(3deg)}}
-@media (prefers-reduced-motion:reduce){.alien-pic{animation:none}}
+
 .step{margin-top:18px;color:var(--muted);font-size:1.05rem;font-weight:700;min-height:1.5em;text-align:center}
 .m-alien .step{color:#D8CCFF}
 .tools{display:flex;justify-content:center;margin:16px 0 0}
@@ -257,8 +257,12 @@ buildItems();
 let AC=null;
 function ac(){
   if(!S.sfx) return null;
-  if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){return null}}
-  if(AC.state==="suspended") AC.resume();
+  if(!AC){
+    // iOS 17+: play even when the ring/silent switch is on silent
+    try{if(navigator.audioSession) navigator.audioSession.type="playback"}catch(e){}
+    try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){return null}
+  }
+  if(AC.state!=="running") AC.resume();
   return AC;
 }
 function tone(f,at,dur,type,vol){
@@ -283,7 +287,13 @@ const SFX={
   done:()=>[523,659,784,1047,1319].forEach((f,i)=>tone(f,i*.1,.35,"triangle",.13)),
   added:()=>tone(880,0,.1,"sine",.12)
 };
-document.addEventListener("touchend",()=>{if(S.sfx)ac()},{once:true});
+function unlockAudio(){
+  const c=ac(); if(!c) return;
+  try{const buf=c.createBuffer(1,1,22050),src=c.createBufferSource();src.buffer=buf;src.connect(c.destination);src.start(0)}catch(e){}
+  if(c.state==="running"){document.removeEventListener("touchend",unlockAudio);document.removeEventListener("click",unlockAudio)}
+}
+document.addEventListener("touchend",unlockAudio);
+document.addEventListener("click",unlockAudio);
 
 // ---------- Helpers ----------
 const $=s=>document.querySelector(s);
