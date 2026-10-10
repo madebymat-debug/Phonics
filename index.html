@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Phonics practice</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Phonics">
+<meta name="theme-color" content="#FFF3C4">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FFF3C4; --dot:#FFE08A; --ink:#1B1F3B; --card:#FFFFFF; --muted:#5A5F7A; --edge:#1B1F3B; --soft:#EFE6C6;
+  --blue:#2F6BFF; --green:#16A34A; --red:#EF4444; --alien:#7C3AED; --pink:#FF3D9A; --orange:#FF8A00; --teal:#0EA5A4;
+  --blue-ink:#2457E0; --green-ink:#15803D; --red-ink:#DC2626; --alien-ink:#6D28D9;
+  --t-sounds:#DCE8FF; --t-green:#D8F6E2; --t-red:#FFE0E0;
+  --mark:#FF8A00; --hl:#FFE066;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#141A33; --dot:#1E2650; --ink:#F3F4FF; --card:#1F2750; --muted:#A9B0D6; --edge:#070A18; --soft:#2A3366;
+    --blue-ink:#8AB0FF; --green-ink:#4ADE80; --red-ink:#FF8080; --alien-ink:#C4B5FD;
+    --t-sounds:#1D2D66; --t-green:#113D26; --t-red:#4A1A22; --hl:#7A5B00; --mark:#FFB020;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#141A33; --dot:#1E2650; --ink:#F3F4FF; --card:#1F2750; --muted:#A9B0D6; --edge:#070A18; --soft:#2A3366;
+  --blue-ink:#8AB0FF; --green-ink:#4ADE80; --red-ink:#FF8080; --alien-ink:#C4B5FD;
+  --t-sounds:#1D2D66; --t-green:#113D26; --t-red:#4A1A22; --hl:#7A5B00; --mark:#FFB020;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100%;background-color:var(--bg);color:var(--ink);
+  background-image:radial-gradient(var(--dot) 1.6px,transparent 2.2px);background-size:22px 22px;
+  font-family:"Andika","Century Gothic","Trebuchet MS",system-ui,sans-serif;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
+#app{max-width:560px;margin:0 auto;padding:16px 16px 28px;min-height:100%}
+
+/* chunky sticker style */
+.act,.go,.ghost,.mbtn,.chip,.toggle,.seg button,.stage{border:3px solid var(--edge);transition:transform .08s,box-shadow .08s}
+.act,.go,.ghost,.mbtn{box-shadow:0 5px 0 var(--edge)}
+.chip,.toggle,.seg button{box-shadow:0 3px 0 var(--edge)}
+.act:active,.go:active:not(:disabled),.ghost:active,.mbtn:active{transform:translateY(3px);box-shadow:0 2px 0 var(--edge)}
+.chip:active,.toggle:active,.seg button:active{transform:translateY(2px);box-shadow:0 1px 0 var(--edge)}
+
+/* Home */
+.title{font-size:2.6rem;line-height:1.05;margin:16px 0 4px;font-weight:700}
+.sub{color:var(--muted);margin:0 0 22px;font-size:1.05rem}
+.acts{display:flex;flex-direction:column;gap:14px}
+.act{display:flex;align-items:center;gap:16px;width:100%;text-align:left;background:var(--c,var(--card));color:#fff;border-radius:22px;padding:14px 16px}
+.act[data-act=sounds]{--c:var(--blue)} .act[data-act=green]{--c:var(--green)}
+.act[data-act=red]{--c:var(--red)} .act[data-act=alien]{--c:var(--alien)}
+.again-row{--c:var(--orange)} #prog{--c:var(--pink)} #addw{--c:var(--teal)}
+.act .sw{flex:none;width:56px;height:56px;border-radius:16px;display:grid;place-items:center;font-weight:700;
+  background:rgba(255,255,255,.24)!important;color:#fff!important}
+.act h2{margin:0;font-size:1.35rem}
+.act p{margin:2px 0 0;color:rgba(255,255,255,.92);font-size:.98rem}
+.foot{margin-top:28px;text-align:center}
+.link{background:none;border:0;color:var(--muted);text-decoration:underline;padding:8px}
+
+/* Setup */
+.bar{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px}
+.back{background:none;border:0;font-size:1.1rem;padding:10px 4px;color:var(--ink);font-weight:700}
+.chips{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0 28px}
+.chip{background:var(--card);border-radius:999px;padding:10px 18px;font-size:1.1rem}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.go{width:100%;border-radius:18px;padding:18px;font-size:1.35rem;font-weight:700;color:#fff;background:var(--green)}
+.go:disabled{opacity:.45}
+.hint{color:var(--muted);font-size:1rem;line-height:1.5;margin:0}
+
+/* Practice */
+.count{color:var(--ink);font-size:1.05rem;font-weight:700}
+.prog{height:12px;background:var(--soft);border:2px solid var(--edge);border-radius:8px;overflow:hidden;margin:4px 0 14px}
+.prog i{display:block;height:100%;background:linear-gradient(90deg,var(--pink),var(--orange),#FFD23F);transition:width .3s}
+.stage{background:var(--card);border-radius:30px;box-shadow:0 6px 0 var(--edge);min-height:58vh;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 12px;
+  position:relative;overflow:hidden;user-select:none;-webkit-user-select:none}
+.stage.m-sounds{background:var(--t-sounds)}
+.stage.m-green{background:var(--t-green)}
+.stage.m-red{background:var(--t-red)}
+.stage.m-alien{--alien:#C4F25E;--mark:#FFD23F;background-color:#2A1366;
+  background-image:radial-gradient(2px 2px at 12% 18%,#fff 50%,transparent 52%),radial-gradient(1.5px 1.5px at 78% 12%,#fff 50%,transparent 52%),
+  radial-gradient(2px 2px at 88% 64%,#fff 50%,transparent 52%),radial-gradient(1.5px 1.5px at 22% 80%,#fff 50%,transparent 52%),
+  radial-gradient(2.5px 2.5px at 60% 88%,#FFD23F 50%,transparent 52%),radial-gradient(1.5px 1.5px at 40% 8%,#fff 50%,transparent 52%),
+  radial-gradient(2px 2px at 6% 52%,#FFD23F 50%,transparent 52%),radial-gradient(120px 120px at 85% 100%,#4C1D95,transparent)}
+.stage.tap{cursor:pointer}
+.stage.slide{animation:slide .28s ease-out}
+@keyframes slide{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:none}}
+.big{display:inline-block;line-height:1;color:var(--blue-ink);font-size:100px}
+.ex{margin-top:14px;color:var(--muted);font-size:1.1rem}
+.word{position:relative;display:inline-flex;justify-content:center;font-size:100px;line-height:1}
+.gp{display:inline-flex;flex-direction:column;align-items:center;padding:0 .02em;border-radius:.14em;transition:background .15s}
+.gp .l{display:block;padding:.04em .03em 0}
+.gp.on{background:var(--hl)}
+.m-alien .gp.on{background:rgba(255,255,255,.2)}
+.mk{display:block;height:.26em;width:100%;position:relative}
+.mk.dot::after{content:"";position:absolute;left:50%;top:.08em;width:.14em;height:.14em;margin-left:-.07em;border-radius:50%;background:var(--mark)}
+.mk.dash::after{content:"";position:absolute;left:14%;right:14%;top:.1em;height:.1em;border-radius:.05em;background:var(--mark)}
+.arcs{position:absolute;left:0;top:0;pointer-events:none;overflow:visible}
+.arcs path{fill:none;stroke:var(--mark);stroke-width:6;stroke-linecap:round}
+.head .mk::after,.head .arcs{visibility:hidden}
+.word.green .l{color:var(--green-ink)}
+.word.alien .l{color:var(--alien-ink)}
+.m-alien .word.alien .l{color:var(--alien)}
+.word.red .l{color:var(--red-ink)}
+.word.blend .gp{background:none}
+.word.blend .l{text-decoration:underline;text-decoration-thickness:.06em;text-underline-offset:.12em}
+.alien-pic{width:84px;height:84px;margin-bottom:6px;animation:bob 2.6s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-12px) rotate(3deg)}}
+@media (prefers-reduced-motion:reduce){.alien-pic{animation:none}}
+.step{margin-top:18px;color:var(--muted);font-size:1.05rem;font-weight:700;min-height:1.5em;text-align:center}
+.m-alien .step{color:#D8CCFF}
+.tools{display:flex;justify-content:center;margin:16px 0 0}
+.toggle{background:var(--card);border-radius:999px;padding:8px 16px;font-size:.98rem;color:var(--ink)}
+.toggle[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.marks{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}
+.mbtn{border-radius:20px;padding:20px 10px;font-size:1.25rem;font-weight:700}
+.mbtn.again{background:var(--card);color:var(--ink)}
+.mbtn.got{background:var(--green);color:#fff}
+
+/* Done */
+.done{text-align:center;padding-top:40px}
+.done .star{font-size:5rem;display:inline-block;animation:pop .5s ease-out}
+@keyframes pop{0%{transform:scale(.3)}70%{transform:scale(1.15)}100%{transform:scale(1)}}
+.done h2{font-size:2.3rem;margin:10px 0 6px}
+.done p{color:var(--muted);font-size:1.15rem;margin:0 0 26px}
+.stack{display:flex;flex-direction:column;gap:14px}
+.ghost{width:100%;background:var(--card);border-radius:18px;padding:16px;font-size:1.15rem;font-weight:700}
+.missed{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:-10px 0 26px}
+.missed span{background:var(--card);border:3px solid var(--edge);border-radius:12px;padding:4px 12px;font-size:1.4rem}
+.confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:5}
+.confetti i{position:absolute;top:-24px;width:10px;height:16px;border-radius:3px;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(112vh) rotate(760deg)}}
+
+/* Add words */
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:18px 0 14px}
+.seg button{background:var(--card);border-radius:14px;padding:12px 6px;font-size:1.1rem;font-weight:700}
+.seg button[aria-pressed="true"]{color:#fff}
+label.f{display:block;color:var(--ink);font-weight:700;font-size:1rem;margin:14px 0 6px}
+.inp{width:100%;font:inherit;font-size:1.6rem;padding:12px 14px;border-radius:14px;border:3px solid var(--edge);background:var(--card);color:var(--ink)}
+.inp.sm{font-size:1.1rem}
+.inp:focus{outline:3px solid var(--blue);outline-offset:1px}
+.preview{background:var(--card);border:3px dashed var(--edge);border-radius:20px;min-height:160px;margin-top:14px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px 10px}
+.warn{color:var(--red-ink);font-size:.98rem;margin-top:10px;text-align:center;min-height:1.3em}
+.msg{color:var(--green-ink);font-weight:700;text-align:center;min-height:1.4em;margin-top:10px}
+.saved{margin-top:30px}
+.saved h3{font-size:1.15rem;margin:22px 0 10px}
+.wlist{display:flex;flex-wrap:wrap;gap:8px}
+.wchip{display:inline-flex;align-items:center;gap:4px;background:var(--card);border:3px solid var(--edge);border-radius:12px;padding:4px 4px 4px 12px;font-size:1.3rem}
+.wchip.green{color:var(--green-ink)}.wchip.alien{color:var(--alien-ink)}.wchip.red{color:var(--red-ink)}.wchip.sounds{color:var(--blue-ink)}
+.wchip button{border:0;background:none;color:var(--muted);font-size:1.2rem;width:34px;height:34px;border-radius:8px}
+.wchip sup{font-size:.7rem;color:var(--muted);margin-left:3px}
+.wchip.ro{padding:4px 12px}
+
+/* Progress */
+.psec{margin-top:28px}
+.psec h2{font-size:1.35rem;margin:0 0 4px}
+.psec .hint{margin-bottom:12px}
+.prow{margin:12px 0}
+.prow .top{display:flex;justify-content:space-between;gap:10px;font-size:1.05rem}
+.prow .top span:last-child{color:var(--muted);font-size:.95rem;text-align:right}
+.pbar{display:flex;height:14px;border-radius:8px;background:var(--soft);border:2px solid var(--edge);overflow:hidden;margin-top:6px}
+.pbar i{display:block;height:100%}
+.pbar .g{background:var(--green)}.pbar .a{background:var(--orange)}
+.key{display:flex;gap:16px;color:var(--muted);font-size:.92rem;margin:8px 0 4px}
+.key b{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+
+@media (prefers-reduced-motion:reduce){
+  .stage.slide,.done .star{animation:none}.prog i{transition:none}.confetti{display:none}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+// ---------- Content (RWI-aligned) ----------
+const SOUNDS = {
+  s1:[["m","map"],["a","ant"],["s","sun"],["d","dog"],["t","top"],["i","ink"],["n","net"],["p","pan"],["g","gap"],["o","on"],["c","cat"],["k","kit"],["u","up"],["b","bat"],["f","fan"],["e","egg"],["l","leg"],["h","hat"],["r","red"],["j","jam"],["v","van"],["y","yes"],["w","web"],["z","zip"],["x","box"]],
+  sf:[["sh","ship"],["th","thin"],["ch","chop"],["qu","quiz"],["ng","ring"],["nk","pink"],["ck","duck"]],
+  s2:[["ay","play"],["ee","tree"],["igh","night"],["ow","snow"],["oo","zoo"],["oo","book"],["ar","car"],["or","fork"],["air","hair"],["ir","bird"],["ou","shout"],["oy","boy"]],
+  s3:[["ea","tea"],["oi","coin"],["a-e","cake"],["i-e","time"],["o-e","home"],["u-e","cube"],["aw","yawn"],["are","care"],["ur","burn"],["er","her"],["ow","cow"],["ai","rain"],["oa","boat"],["ew","chew"],["ire","fire"],["ear","hear"],["ure","pure"],["tion","station"]]
+};
+// Words: graphemes separated by spaces; split digraphs written "a_ ... _e"
+const GREEN = {
+  s1:["c a t","d o g","s u n","p i g","h e n","b e d","m a p","t i p","r u n","j a m","f o x","y e s","w e t","z i p","r e d","l o g","h u t","b u s","k i t","w e b","v a n","n u t"],
+  sf:["sh i p","ch i p","th i n","sh o p","f i sh","m u ch","th e n","qu i z","r i ng","s i ng","b a nk","p i nk","d u ck","b a ck","l o ck","ch i ck","th i ck"],
+  adj:["f r o g","s t a m p","c r a b","f l a g","b e s t","h a n d","s p o t","l u n ch","s n a ck","t r u ck","b r i ng","d r i nk","c l a p","s w i m","t e n t"],
+  s2:["p l ay","d ay","s ee","t r ee","g r ee n","n igh t","l igh t","h igh","s n ow","b l ow","z oo","m oo n","l oo k","b oo k","c ar","s t ar","p ar k","f or k","s p or t","f air","h air","g ir l","b ir d","sh ir t","ou t","sh ou t","l ou d","b oy","t oy"],
+  s3:["t ea","b ea ch","c oi n","s p oi l","c a_ k _e","t i_ m _e","h o_ m _e","c u_ b _e","s n a_ k _e","y aw n","c are","b ur n","t ur n","h er","c ow","d ow n","r ai n","b oa t","ch ew","n ew","f ire","h ear","n ear","p ure"]
+};
+const ALIEN = {
+  s1:["v a p","j e x","t i b","f u m","p a b","n i m","y o d","g e k","sh o m","th i p","ch a b","qu e n","v u ng","z e ck","b l i m","s t r o m","f r a n t","c l u p"],
+  s2:["k ee b","v igh t","z ow","s m oo","p ar g","j or d","b air t","ch ir","p ou k","v oy","s t ay p","g l ee m"],
+  s3:["t ea p","z oi l","f a_ p _e","b i_ m _e","j o_ t _e","m u_ b _e","d aw p","z are","m ur g","d er b","g ai m","l oa t","f r ew","v ire","j ear","b ure"]
+};
+const RED = ["the","to","I","no","go","of","said","you","your","my","he","she","we","me","be","was","all","are","what","there","they","her","some","come","one","do","does","were","where","who","could","would","should","any","many","two","school","want","call","small","love","here","once"];
+
+const LEVEL_NAMES = {s1:"Set 1",sf:"Special friends",adj:"Blends",s2:"Set 2",s3:"Set 3",all:"RWI red words"};
+const ACTS = {
+  sounds:{name:"Speed Sounds",desc:"Say the sound on the card",sw:"var(--blue)",icon:"sh",levels:["s1","sf","s2","s3"],
+    help:"Show the card. He says the sound, not the letter name."},
+  green:{name:"Green words",desc:"Fred Talk, then read the word",sw:"var(--green)",icon:"cat",levels:["s1","sf","adj","s2","s3"],
+    help:"Tap the word to step through each sound, then tap again to read the whole word. Dots are single sounds, dashes are special friends."},
+  alien:{name:"Nonsense words",desc:"Made-up words, like the June check",sw:"var(--alien)",icon:"zib",levels:["s1","s2","s3"],
+    help:"Nonsense words, so he has to sound them out rather than guess."},
+  red:{name:"Red words",desc:"Tricky words he just has to know",sw:"var(--red)",icon:"the",levels:["all"],
+    help:"No sounding out. He just needs to know these on sight."}
+};
+const TYPE_NAMES={green:"Green",alien:"Nonsense",red:"Red"};
+const SESSION = 10;
+
+// ---------- Storage ----------
+const KEY="rwi-phonics-v1";
+function load(){try{const v=JSON.parse(localStorage.getItem(KEY));return v&&typeof v==="object"?v:{}}catch(e){return {}}}
+let S=load(); S.p=S.p||{}; S.levels=S.levels||{}; S.head=!!S.head; S.custom=Array.isArray(S.custom)?S.custom:[];
+if(S.sfx===undefined) S.sfx=true;
+S.group=S.group||"From school"; S.addType=S.addType||"green";
+S.h=S.h&&typeof S.h==="object"?S.h:{}; // history: {id:{g:gotCount,a:againCount,t:lastTime}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+
+// ---------- Items ----------
+let ALL={}, ITEMS={};
+function buildItems(){
+  ALL={}; ITEMS={sounds:{},green:{},alien:{},red:{}};
+  const add=it=>(ALL[it.id]=it);
+  for (const lv in SOUNDS) ITEMS.sounds[lv]=SOUNDS[lv].map(([g,h])=>add({id:"sounds:"+g+"|"+h,mode:"sounds",g,hint:h}));
+  for (const lv in GREEN) ITEMS.green[lv]=GREEN[lv].map(s=>add({id:"green:"+s,mode:"green",str:s}));
+  for (const lv in ALIEN) ITEMS.alien[lv]=ALIEN[lv].map(s=>add({id:"alien:"+s,mode:"alien",str:s}));
+  ITEMS.red.all=RED.map(w=>add({id:"red:"+w,mode:"red",w}));
+  S.custom.forEach(c=>{
+    const lv="c:"+c.g, it=c.t==="red"?{id:"red:"+c.s,mode:"red",w:c.s}:{id:c.t+":"+c.s,mode:c.t,str:c.s};
+    (ITEMS[c.t][lv]=ITEMS[c.t][lv]||[]).push(add(it));
+  });
+}
+function levelsFor(k){
+  const base=ACTS[k].levels;
+  const extra=k==="sounds"?[]:[...new Set(S.custom.filter(c=>c.t===k).map(c=>"c:"+c.g))];
+  return [...base,...extra];
+}
+function levelName(l){return l.startsWith("c:")?l.slice(2):LEVEL_NAMES[l]}
+function againList(){return Object.keys(S.p).filter(id=>S.p[id]==="again"&&ALL[id]).map(id=>ALL[id])}
+buildItems();
+
+// ---------- Sound effects (synthesised, no files) ----------
+let AC=null;
+function ac(){
+  if(!S.sfx) return null;
+  if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){return null}}
+  if(AC.state==="suspended") AC.resume();
+  return AC;
+}
+function tone(f,at,dur,type,vol){
+  const c=ac(); if(!c) return;
+  const t=c.currentTime+at, o=c.createOscillator(), g=c.createGain();
+  o.type=type||"sine"; o.frequency.setValueAtTime(f,t);
+  g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(vol||.15,t+.012);
+  g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+dur+.03);
+}
+const NOTES=[523,587,659,784,880,1047,1175];
+const SFX={
+  step:n=>tone(NOTES[n%NOTES.length],0,.14,"triangle",.16),
+  blend:()=>[523,659,784,1047].forEach((f,i)=>tone(f,i*.06,.28,"triangle",.12)),
+  got:()=>{
+    // quick rising major arpeggio, then a bright bell with sparkles on top
+    [523,659,784].forEach((f,i)=>tone(f,i*.07,.18,"triangle",.16));
+    tone(1047,.21,.6,"sine",.2); tone(2094,.21,.45,"sine",.06); tone(1568,.24,.5,"triangle",.07);
+    [2637,3136,3520].forEach((f,i)=>tone(f,.32+i*.06,.18,"sine",.05));
+  },
+  again:()=>{tone(392,0,.15,"sine",.11);tone(330,.11,.2,"sine",.09)},
+  done:()=>[523,659,784,1047,1319].forEach((f,i)=>tone(f,i*.1,.35,"triangle",.13)),
+  added:()=>tone(880,0,.1,"sine",.12)
+};
+document.addEventListener("touchend",()=>{if(S.sfx)ac()},{once:true});
+
+// ---------- Helpers ----------
+const $=s=>document.querySelector(s);
+const app=$("#app");
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function parse(str){
+  const tokens=[],sounds=[];let open=-1;
+  str.split(" ").forEach((t,i)=>{
+    if(t.endsWith("_")){open=sounds.length;sounds.push([i]);tokens.push({g:t.slice(0,-1),kind:"split"})}
+    else if(t.startsWith("_")){sounds[open].push(i);tokens.push({g:t.slice(1),kind:"split"})}
+    else{sounds.push([i]);tokens.push({g:t,kind:t.length>1?"dash":"dot"})}
+  });
+  return {tokens,sounds,splits:sounds.filter(s=>s.length===2)};
+}
+function wordText(it){return it.mode==="sounds"?it.g:it.mode==="red"?it.w:it.str.replace(/[_ ]/g,"")}
+function wordHTML(str,mode,cls){
+  const {tokens}=parse(str);
+  return `<div class="word ${mode} ${cls||""}">${tokens.map((t,i)=>`<span class="gp" data-i="${i}"><span class="l">${esc(t.g)}</span><span class="mk ${t.kind}"></span></span>`).join("")}<svg class="arcs" width="0" height="0"></svg></div>`;
+}
+let CUR=null; // {el,f} word currently on screen, for redrawing arcs
+function drawArcs(el,f){
+  if(!el) return; const svg=el.querySelector(".arcs"); if(!svg) return;
+  CUR={el,f};
+  if(!f.splits.length){svg.innerHTML="";return}
+  const wr=el.getBoundingClientRect();
+  const gps=el.querySelectorAll(".gp");
+  svg.innerHTML=f.splits.map(([a,b])=>{
+    const ra=gps[a].querySelector(".l").getBoundingClientRect(), rb=gps[b].querySelector(".l").getBoundingClientRect();
+    const x1=ra.left+ra.width/2-wr.left, x2=rb.left+rb.width/2-wr.left, y=ra.bottom-wr.top+4, d=wr.height*0.16;
+    return `<path d="M${x1} ${y} Q${(x1+x2)/2} ${y+d} ${x2} ${y}"/>`;
+  }).join("");
+}
+function fit(el,max){
+  if(!el) return; el.dataset.max=max; el.style.fontSize="100px";
+  const avail=el.parentElement.clientWidth-30, w=el.scrollWidth||1;
+  el.style.fontSize=Math.max(40,Math.min(max,Math.floor(100*avail/w)))+"px";
+}
+const redraw=()=>{
+  document.querySelectorAll(".stage .word,.stage .big,.preview .word").forEach(e=>fit(e,+e.dataset.max||200));
+  if(CUR&&document.body.contains(CUR.el))drawArcs(CUR.el,CUR.f);
+};
+window.addEventListener("resize",redraw);
+if(document.fonts&&document.fonts.ready) document.fonts.ready.then(redraw);
+
+// Typed entry -> internal format. "c a-e k" => "c a_ k _e"
+function toInternal(input,type){
+  const raw=input.trim().toLowerCase().replace(/\s+/g," ");
+  if(!raw) return {err:""};
+  if(type==="red"){
+    const w=input.trim().replace(/\s+/g," ");
+    if(!/^[A-Za-z' ]+$/.test(w)) return {err:"Letters only"};
+    return {s:w.replace(/ /g,"")};
+  }
+  if(!/^[a-z \-_]+$/.test(raw)) return {err:"Letters only, with spaces between sounds"};
+  const toks=raw.split(" "), out=[]; let pend=false, splits=0;
+  for(const t of toks){
+    const m=t.match(/^([aeiou])[-_]e$/);
+    if(m){ if(pend) return {err:"Only one split digraph per word"}; out.push(m[1]+"_"); pend=true; splits++; continue }
+    if(/[-_]/.test(t)) return {err:"Write split digraphs like a-e, i-e, o-e, u-e"};
+    out.push(t);
+    if(pend){out.push("_e");pend=false}
+  }
+  if(pend) return {err:"A split digraph needs a sound after it, e.g. c a-e k"};
+  if(splits>1) return {err:"Only one split digraph per word"};
+  const warn=toks.length===1&&raw.length>2?"Tip: put a space between each sound":"";
+  return {s:out.join(" "),warn};
+}
+
+const ALIEN_SVG=`<svg class="alien-pic" viewBox="0 0 100 100" aria-hidden="true">
+<line x1="38" y1="22" x2="30" y2="6" stroke="var(--alien)" stroke-width="4" stroke-linecap="round"/><circle cx="30" cy="6" r="5" fill="var(--mark)"/>
+<line x1="62" y1="22" x2="72" y2="8" stroke="var(--alien)" stroke-width="4" stroke-linecap="round"/><circle cx="72" cy="8" r="5" fill="var(--mark)"/>
+<path d="M18 62c0-24 14-42 32-42s32 18 32 42c0 16-12 28-32 28S18 78 18 62z" fill="var(--alien)"/>
+<circle cx="50" cy="52" r="15" fill="#fff"/><circle cx="53" cy="54" r="7" fill="#1B2A4A"/>
+<path d="M38 76q12 8 24 0" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round"/></svg>`;
+
+const SPROUT_SVG=`<svg class="alien-pic" viewBox="0 0 100 100" aria-hidden="true">
+<path d="M50 34 C50 26 50 22 50 16" stroke="#15803D" stroke-width="4" stroke-linecap="round" fill="none"/>
+<path d="M50 19 C40 6 26 8 23 14 C33 23 44 23 50 19Z" fill="#4ADE80" stroke="#15803D" stroke-width="3" stroke-linejoin="round"/>
+<path d="M50 17 C60 3 76 5 79 11 C69 21 57 21 50 17Z" fill="#4ADE80" stroke="#15803D" stroke-width="3" stroke-linejoin="round"/>
+<ellipse cx="50" cy="63" rx="32" ry="29" fill="#22C55E" stroke="#15803D" stroke-width="3"/>
+<circle cx="39" cy="58" r="7.5" fill="#fff"/><circle cx="61" cy="58" r="7.5" fill="#fff"/>
+<circle cx="40" cy="59" r="3.8" fill="#1B1F3B"/><circle cx="62" cy="59" r="3.8" fill="#1B1F3B"/>
+<circle cx="30" cy="70" r="4.5" fill="#FF8FB8" opacity=".85"/><circle cx="70" cy="70" r="4.5" fill="#FF8FB8" opacity=".85"/>
+<path d="M41 73 Q50 81 59 73" stroke="#14532D" stroke-width="3.5" fill="none" stroke-linecap="round"/></svg>`;
+const CHEEKY_SVG=`<svg class="alien-pic" viewBox="0 0 100 100" aria-hidden="true">
+<path d="M31 36 L24 14 L43 29Z" fill="#FF8A00" stroke="#9F1239" stroke-width="3" stroke-linejoin="round"/>
+<path d="M69 36 L76 14 L57 29Z" fill="#FF8A00" stroke="#9F1239" stroke-width="3" stroke-linejoin="round"/>
+<path d="M18 63c0-20 14-36 32-36s32 16 32 36c0 18-14 29-32 29S18 81 18 63z" fill="#F43F5E" stroke="#9F1239" stroke-width="3"/>
+<circle cx="39" cy="57" r="8" fill="#fff"/><circle cx="41" cy="58" r="4" fill="#1B1F3B"/>
+<path d="M55 58 Q62 51 69 58" stroke="#1B1F3B" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+<path d="M37 70 Q50 84 63 70 Z" fill="#7F1D1D" stroke="#7F1D1D" stroke-width="2" stroke-linejoin="round"/>
+<ellipse cx="52" cy="76" rx="5" ry="3.2" fill="#FF8FB8"/></svg>`;
+const CHAR={green:SPROUT_SVG,red:CHEEKY_SVG,alien:ALIEN_SVG};
+
+// ---------- Screens ----------
+let P=null;
+const PAL=["var(--pink)","var(--orange)","var(--green)","var(--blue)","var(--alien)","var(--red)","var(--teal)"];
+
+function home(){
+  P=null; CUR=null;
+  const n=againList().length;
+  app.innerHTML=`
+  <h1 class="title">${"Phonics".split("").map((c,i)=>`<span style="color:${PAL[i%PAL.length]}">${c}</span>`).join("")} practice</h1>
+  <p class="sub">Read Write Inc. practice for home</p>
+  <div class="acts">
+    ${Object.entries(ACTS).map(([k,a])=>`
+      <button class="act" data-act="${k}">
+        <span class="sw" style="background:${a.sw};font-size:${a.icon.length>2?"1.15rem":"1.5rem"}">${a.icon}</span>
+        <span><h2>${a.name}</h2><p>${a.desc}</p></span>
+      </button>`).join("")}
+    ${n?`<button class="act again-row" data-again>
+        <span class="sw" style="background:var(--mark)">${n}</span>
+        <span><h2>Practise again</h2><p>Everything marked "again later"</p></span>
+      </button>`:""}
+    <button class="act" id="prog">
+      <span class="sw" style="background:var(--green)">✓</span>
+      <span><h2>Progress</h2><p>What he's got and what's still tricky</p></span>
+    </button>
+    <button class="act" id="addw">
+      <span class="sw" style="background:var(--ink);color:var(--bg)">+</span>
+      <span><h2>Add words</h2><p>${S.custom.length?S.custom.length+" saved from school sheets":"Type in words from school sheets"}</p></span>
+    </button>
+  </div>
+  <div class="foot">
+    <button class="link" id="sfx">Sound effects: ${S.sfx?"on":"off"}</button>
+  </div>`;
+  app.querySelectorAll("[data-act]").forEach(b=>b.onclick=()=>setup(b.dataset.act));
+  const ag=app.querySelector("[data-again]"); if(ag) ag.onclick=()=>start(againList(),"Practise again");
+  $("#addw").onclick=addScreen;
+  $("#sfx").onclick=()=>{S.sfx=!S.sfx;save();if(S.sfx)SFX.got();home()};
+  $("#prog").onclick=progressScreen;
+  window.scrollTo(0,0);
+}
+
+function setup(k){
+  const a=ACTS[k], lvls=levelsFor(k);
+  let sel=(S.levels[k]||[lvls[0]]).filter(l=>lvls.includes(l));
+  if(!sel.length) sel=[lvls[0]];
+  const draw=()=>{
+    app.innerHTML=`
+    <div class="bar"><button class="back" id="back">‹ Home</button></div>
+    <h1 class="title">${a.name}</h1>
+    <p class="hint">${a.help}</p>
+    <div class="chips">${lvls.map(l=>`<button class="chip" data-l="${esc(l)}" aria-pressed="${sel.includes(l)}">${esc(levelName(l))}</button>`).join("")}</div>
+    <button class="go" id="go" ${sel.length?"":"disabled"} style="background:${a.sw}">Start</button>`;
+    $("#back").onclick=home;
+    app.querySelectorAll(".chip").forEach(c=>c.onclick=()=>{
+      const l=c.dataset.l; sel=sel.includes(l)?sel.filter(x=>x!==l):[...sel,l]; draw();
+    });
+    $("#go").onclick=()=>{S.levels[k]=sel;save();start(sel.flatMap(l=>ITEMS[k][l]||[]),a.name)};
+  };
+  draw(); window.scrollTo(0,0);
+}
+
+function addScreen(){
+  CUR=null;
+  const groups=[...new Set(S.custom.map(c=>c.g))];
+  app.innerHTML=`
+  <div class="bar"><button class="back" id="back">‹ Home</button></div>
+  <h1 class="title">Add words</h1>
+  <p class="hint">Put a space between each sound: <b>sh ee p</b>. Write split digraphs as a-e, i-e, o-e or u-e: <b>c a-e k</b> makes cake.</p>
+  <div class="seg" role="group" aria-label="Word type">
+    ${["green","alien","red"].map(t=>`<button data-t="${t}" aria-pressed="${S.addType===t}" style="${S.addType===t?`background:var(--${t})`:""}">${TYPE_NAMES[t]}</button>`).join("")}
+  </div>
+  <label class="f" for="w">Word</label>
+  <input class="inp" id="w" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="done"
+    placeholder="${S.addType==="red"?"said":S.addType==="alien"?"z oi l":"sh ee p"}">
+  <div class="preview" id="pv"><span class="hint">Preview shows here</span></div>
+  <div class="warn" id="warn"></div>
+  <label class="f" for="g">Group</label>
+  <input class="inp sm" id="g" list="gl" value="${esc(S.group)}" autocomplete="off">
+  <datalist id="gl">${groups.map(g=>`<option value="${esc(g)}">`).join("")}</datalist>
+  <button class="go" id="save" style="margin-top:18px;background:var(--${S.addType})" disabled>Add word</button>
+  <div class="msg" id="msg" aria-live="polite"></div>
+  <div class="saved">${savedHTML()}</div>`;
+  $("#back").onclick=home;
+  app.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{S.addType=b.dataset.t;save();addScreen()});
+  const w=$("#w"),pv=$("#pv"),warn=$("#warn"),btn=$("#save"),msg=$("#msg");
+  let cur=null;
+  const update=()=>{
+    const r=toInternal(w.value,S.addType); cur=r.s?r:null;
+    warn.textContent=r.err||r.warn||""; msg.textContent="";
+    btn.disabled=!cur;
+    if(!cur){pv.innerHTML=`<span class="hint">Preview shows here</span>`;return}
+    if(S.addType==="red"){pv.innerHTML=`<div class="word red"><span class="gp"><span class="l">${esc(cur.s)}</span></span></div>`;fit(pv.firstChild,130);return}
+    pv.innerHTML=wordHTML(cur.s,S.addType); fit(pv.querySelector(".word"),130); drawArcs(pv.querySelector(".word"),parse(cur.s));
+  };
+  w.oninput=update;
+  const doSave=()=>{
+    if(!cur) return;
+    const g=($("#g").value.trim()||"From school").slice(0,40);
+    if(S.custom.some(c=>c.t===S.addType&&c.s===cur.s&&c.g===g)){msg.style.color="var(--red)";msg.textContent="Already in that group";return}
+    S.custom.push({t:S.addType,s:cur.s,g}); S.group=g; save(); buildItems(); SFX.added();
+    const word=S.addType==="red"?cur.s:cur.s.replace(/[_ ]/g,"");
+    w.value=""; update(); msg.style.color=""; msg.textContent="Added "+word;
+    app.querySelector(".saved").innerHTML=savedHTML(); bindDeletes();
+    const gl=$("#gl"); if(![...gl.options].some(o=>o.value===g)) gl.insertAdjacentHTML("beforeend",`<option value="${esc(g)}">`);
+    w.focus();
+  };
+  btn.onclick=doSave;
+  w.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();doSave()}};
+  bindDeletes();
+}
+function savedHTML(){
+  if(!S.custom.length) return "";
+  const groups=[...new Set(S.custom.map(c=>c.g))];
+  return groups.map(g=>{
+    const ws=S.custom.map((c,i)=>({...c,i})).filter(c=>c.g===g);
+    return `<h3>${esc(g)} (${ws.length})</h3><div class="wlist">${ws.map(c=>`<span class="wchip ${c.t}">${esc(c.t==="red"?c.s:c.s.replace(/[_ ]/g,""))}<button data-del="${c.i}" aria-label="Delete ${esc(c.s.replace(/[_ ]/g,""))}">×</button></span>`).join("")}</div>`;
+  }).join("");
+}
+function bindDeletes(){
+  app.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{
+    S.custom.splice(+b.dataset.del,1); save(); buildItems();
+    app.querySelector(".saved").innerHTML=savedHTML(); bindDeletes();
+  });
+}
+
+function dayLabel(ts){
+  const d=new Date(ts), now=new Date(), y=new Date(); y.setDate(now.getDate()-1);
+  if(d.toDateString()===now.toDateString()) return "today";
+  if(d.toDateString()===y.toDateString()) return "yesterday";
+  return d.toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long"});
+}
+function chip(it,extra){return `<span class="wchip ro ${it.mode}">${esc(wordText(it))}${extra||""}</span>`}
+function progressScreen(){
+  CUR=null;
+  const again=againList();
+  const hist=Object.entries(S.h).filter(([id])=>ALL[id]);
+  const last=hist.reduce((m,[,h])=>Math.max(m,h.t||0),0);
+  const missed=hist.filter(([,h])=>h.a>0).sort((x,y)=>y[1].a-x[1].a||(y[1].t||0)-(x[1].t||0)).slice(0,12);
+  const order=["sounds","green","red","alien"];
+  const setRows=order.map(k=>{
+    const rows=levelsFor(k).map(l=>{
+      const its=ITEMS[k][l]||[]; if(!its.length) return "";
+      const n=its.length, g=its.filter(i=>S.p[i.id]==="got").length, a=its.filter(i=>S.p[i.id]==="again").length;
+      return `<div class="prow"><div class="top"><span>${esc(levelName(l))}</span><span>${g} of ${n} got it${a?`, ${a} to practise`:""}</span></div>
+        <div class="pbar"><i class="g" style="width:${g/n*100}%"></i><i class="a" style="width:${a/n*100}%"></i></div></div>`;
+    }).join("");
+    return `<h3 style="margin:20px 0 4px;font-size:1.15rem">${ACTS[k].name}</h3>${rows}`;
+  }).join("");
+  app.innerHTML=`
+  <div class="bar"><button class="back" id="back">‹ Home</button></div>
+  <h1 class="title">Progress</h1>
+  <p class="sub">${last?`Last practised ${dayLabel(last)}`:"Nothing practised yet. Start with Speed Sounds."}</p>
+
+  <div class="psec">
+    <h2>Still tricky (${again.length})</h2>
+    <p class="hint">Last marked "again later". They drop off this list once he gets them right.</p>
+    ${again.length?`<div class="wlist">${order.flatMap(m=>again.filter(it=>it.mode===m)).map(it=>chip(it)).join("")}</div>
+      <button class="go" id="practise" style="margin-top:16px">Practise these ${again.length}</button>`
+      :`<p class="hint">${last?"Nothing tricky right now.":""}</p>`}
+  </div>
+
+  ${missed.length?`<div class="psec">
+    <h2>Most missed</h2>
+    <p class="hint">Times marked "again later" overall, including ones he's since got.</p>
+    <div class="wlist">${missed.map(([id,h])=>chip(ALL[id],`<sup>×${h.a}</sup>`)).join("")}</div>
+  </div>`:""}
+
+  <div class="psec">
+    <h2>By set</h2>
+    <div class="key"><span><b style="background:var(--green)"></b>Got it</span><span><b style="background:var(--mark)"></b>To practise</span><span><b style="background:var(--line)"></b>Not tried</span></div>
+    ${setRows}
+  </div>
+
+  <div class="foot"><button class="link" id="reset">Reset progress</button></div>`;
+  $("#back").onclick=home;
+  const pr=$("#practise"); if(pr) pr.onclick=()=>start(again,"Practise again");
+  $("#reset").onclick=()=>{if(confirm("Clear all progress and history? Your added words stay.")){S.p={};S.h={};save();progressScreen()}};
+  window.scrollTo(0,0);
+}
+
+function start(items,label){
+  if(!items.length){home();return}
+  P={pool:shuffle(items),off:0,label,deck:[],i:0,got:[],again:[]};
+  nextBatch();
+}
+function nextBatch(){
+  P.deck=P.pool.slice(P.off,P.off+SESSION); P.off+=P.deck.length; P.i=0; P.got=[]; P.again=[];
+  card(false);
+}
+
+function card(anim=true){
+  CUR=null;
+  const it=P.deck[P.i];
+  const pct=(P.i/P.deck.length)*100;
+  let body="",tappable=false;
+  if(it.mode==="sounds"){
+    body=`<div class="big">${esc(it.g)}</div><div class="ex">as in ${esc(it.hint)}</div>`;
+  } else if(it.mode==="red"){
+    body=`${CHAR.red}<div class="word red"><span class="gp"><span class="l">${esc(it.w)}</span></span></div>`;
+  } else {
+    tappable=true;
+    body=`${CHAR[it.mode]||""}${wordHTML(it.str,it.mode,S.head?"head":"")}
+      <div class="step" id="step">Tap the word to sound it out</div>`;
+  }
+  app.innerHTML=`
+    <div class="bar"><button class="back" id="back">‹ Stop</button><span class="count">${P.i+1} of ${P.deck.length}</span></div>
+    <div class="prog"><i style="width:${pct}%"></i></div>
+    <div class="stage m-${it.mode} ${tappable?"tap":""} ${anim?"slide":""}" id="stage" ${tappable?'role="button" tabindex="0" aria-label="Next sound"':""}>${body}</div>
+    ${tappable?`<div class="tools"><button class="toggle" id="head" aria-pressed="${S.head}">Hide sound buttons</button></div>`:""}
+    <div class="marks">
+      <button class="mbtn again" id="again">Again later</button>
+      <button class="mbtn got" id="got">Got it</button>
+    </div>`;
+  $("#back").onclick=()=>P.got.length||P.again.length?finish():home();
+  $("#again").onclick=()=>mark("again");
+  $("#got").onclick=()=>mark("got");
+  fit($("#stage").querySelector(".word,.big"),it.mode==="sounds"?240:200);
+  if(tappable){
+    const f=parse(it.str); let step=-1;
+    const stage=$("#stage"),word=stage.querySelector(".word"),stepEl=$("#step");
+    const gps=[...word.querySelectorAll(".gp")];
+    const adv=()=>{
+      gps.forEach(g=>g.classList.remove("on")); word.classList.remove("blend");
+      word.querySelectorAll("path").forEach(p=>p.style.strokeWidth="");
+      if(step<f.sounds.length) step++; else step=-1;
+      if(step===-1){stepEl.textContent="Tap the word to sound it out";return}
+      if(step===f.sounds.length){word.classList.add("blend");stepEl.textContent="Now read the whole word";SFX.blend();return}
+      f.sounds[step].forEach(i=>gps[i].classList.add("on"));
+      const pi=f.splits.indexOf(f.sounds[step]);
+      if(pi>-1){const p=word.querySelectorAll("path")[pi]; if(p) p.style.strokeWidth="8"}
+      stepEl.textContent=`Sound ${step+1} of ${f.sounds.length}`;
+      SFX.step(step);
+    };
+    stage.onclick=adv;
+    stage.onkeydown=e=>{if(e.key===" "||e.key==="Enter"){e.preventDefault();adv()}};
+    $("#head").onclick=()=>{S.head=!S.head;save();word.classList.toggle("head",S.head);$("#head").setAttribute("aria-pressed",S.head)};
+    drawArcs(word,f);
+  }
+}
+
+function mark(r){
+  const it=P.deck[P.i]; S.p[it.id]=r;
+  const h=S.h[it.id]||(S.h[it.id]={g:0,a:0}); h[r==="got"?"g":"a"]++; h.t=Date.now();
+  save();
+  (r==="got"?P.got:P.again).push(it);
+  P.i++;
+  if(P.i>=P.deck.length) finish(); else { r==="got"?SFX.got():SFX.again(); card(); }
+}
+
+function confetti(){
+  const box=document.createElement("div"); box.className="confetti"; box.setAttribute("aria-hidden","true");
+  const cols=["#FF3D9A","#FF8A00","#FFD23F","#16A34A","#2F6BFF","#7C3AED","#0EA5A4"];
+  for(let i=0;i<40;i++){
+    const c=document.createElement("i");
+    c.style.left=Math.random()*100+"%"; c.style.background=cols[i%cols.length];
+    c.style.animationDuration=(1.6+Math.random()*1.4)+"s"; c.style.animationDelay=(Math.random()*.4)+"s";
+    c.style.transform=`rotate(${Math.random()*360}deg)`; box.appendChild(c);
+  }
+  document.body.appendChild(box); setTimeout(()=>box.remove(),3600);
+}
+function finish(){
+  CUR=null;
+  const more=P.off<P.pool.length, g=P.got.length, a=P.again.length;
+  app.innerHTML=`
+  <div class="done">
+    <div class="star" aria-hidden="true">⭐</div>
+    <h2>${a===0&&g>0?"Brilliant!":"Well done!"}</h2>
+    <p>${g} got it${a?`, ${a} to try again`:""}</p>
+    ${a?`<div class="missed">${P.again.map(it=>`<span>${esc(wordText(it))}</span>`).join("")}</div>`:""}
+    <div class="stack">
+      ${a?`<button class="go" id="retry">Try those ${a} again</button>`:""}
+      ${more?`<button class="ghost" id="more">${SESSION} more</button>`:""}
+      <button class="ghost" id="home">Home</button>
+    </div>
+  </div>`;
+  SFX.done(); confetti();
+  const rt=$("#retry"); if(rt) rt.onclick=()=>start(P.again,P.label);
+  const mo=$("#more"); if(mo) mo.onclick=nextBatch;
+  $("#home").onclick=home;
+  window.scrollTo(0,0);
+}
+
+home();
+if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))}
+</script>
+</body>
+</html>
