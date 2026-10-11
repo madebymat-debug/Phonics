@@ -39,11 +39,13 @@
   --t-sounds:#1D2D66; --t-green:#113D26; --t-red:#4A1A22; --hl:#7A5B00; --mark:#FFB020;
 }
 *,*::before,*::after{box-sizing:border-box}
-html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+html{touch-action:manipulation;height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
 body{margin:0;min-height:100%;background-color:var(--bg);color:var(--ink);
   background-image:radial-gradient(var(--dot) 1.6px,transparent 2.2px);background-size:22px 22px;
   font-family:"Andika","Century Gothic","Trebuchet MS",system-ui,sans-serif;-webkit-tap-highlight-color:transparent}
-button{font:inherit;color:inherit;cursor:pointer}
+button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation}
+.slot,.done .sticker{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.done .sticker.wig{animation:wig .5s ease}
 button:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
 #app{max-width:560px;margin:0 auto;padding:16px 16px 28px;min-height:100%}
 
@@ -508,6 +510,46 @@ const CHEEKY_SVG=`<svg class="alien-pic" viewBox="0 0 100 100" aria-hidden="true
 <ellipse cx="52" cy="76" rx="5" ry="3.2" fill="#FF8FB8"/></svg>`;
 const CHAR={green:SPROUT_SVG,red:CHEEKY_SVG,alien:ALIEN_SVG};
 
+// ---------- Sticker tap sounds: one style per sticker page ----------
+function sweep(f0,f1,at,dur,type,vol){
+  const c=ac(); if(!c) return;
+  const t=c.currentTime+at, o=c.createOscillator(), g=c.createGain();
+  o.type=type||"sine"; o.frequency.setValueAtTime(f0,t); o.frequency.exponentialRampToValueAtTime(Math.max(f1,1),t+dur);
+  g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(vol||.15,t+.01); g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+dur+.03);
+}
+let NOISE=null;
+function noise(at,dur,vol,ftype,f0,f1){
+  const c=ac(); if(!c) return;
+  if(!NOISE||NOISE.sampleRate!==c.sampleRate){NOISE=c.createBuffer(1,c.sampleRate,c.sampleRate);const d=NOISE.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1}
+  const t=c.currentTime+at, s=c.createBufferSource(), f=c.createBiquadFilter(), g=c.createGain();
+  s.buffer=NOISE; f.type=ftype||"bandpass"; f.Q.value=4; f.frequency.setValueAtTime(f0,t); f.frequency.exponentialRampToValueAtTime(f1||f0,t+dur);
+  g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(vol||.2,t+.01); g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  s.connect(f); f.connect(g); g.connect(c.destination); s.start(t); s.stop(t+dur+.03);
+}
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const PENTA=[1047,1175,1319,1568,1760,2093,2349];
+const STICKER_SOUNDS={
+  pets:()=>{const k=rnd(.85,1.2);sweep(900*k,1700*k,0,.08,"sine",.16);sweep(1700*k,1100*k,.08,.1,"sine",.14)},           // squeak
+  wild:()=>{const k=rnd(.85,1.15);sweep(170*k,620*k,0,.14,"triangle",.2);sweep(620*k,260*k,.14,.22,"triangle",.16)},      // boing
+  ocean:()=>{for(let i=0;i<4;i++)sweep(rnd(350,600),rnd(1100,1700),i*.07+rnd(0,.03),.07,"sine",.13)},                      // bubbles
+  bugs:()=>{const k=rnd(.9,1.15);sweep(2100*k,3300*k,0,.07,"sine",.11);sweep(2500*k,3700*k,.1,.07,"sine",.1);sweep(2300*k,3500*k,.19,.06,"sine",.08)}, // tweet tweet
+  magic:()=>{[0,1,2,3,4,5].forEach(i=>tone(PENTA[i]*rnd(.98,1.02),i*.05,.35,"triangle",.07));sweep(2000,4000,.05,.4,"sine",.03)},   // sparkle
+  space:()=>{sweep(rnd(1600,2200),160,0,.3,"square",.05);sweep(rnd(1500,1900),140,.06,.28,"sawtooth",.03)},              // laser
+  nature:()=>{for(let i=0;i<3;i++)tone(PENTA[Math.floor(Math.random()*PENTA.length)],i*.12+rnd(0,.04),.9,"sine",.08)},    // wind chimes
+  vehicles:()=>{const f=rnd(380,480);tone(f,0,.11,"square",.05);tone(f*1.26,0,.11,"square",.03);tone(f,.16,.14,"square",.05);tone(f*1.26,.16,.14,"square",.03)}, // beep beep
+  food:()=>{noise(0,.07,.28,"bandpass",900);noise(.12,.07,.28,"bandpass",700);sweep(320,240,.24,.18,"sine",.12)},          // nom nom
+  play:()=>{sweep(700,160,0,.12,"sine",.2);sweep(560,150,.16,.1,"sine",.15);sweep(430,140,.29,.08,"sine",.1)},            // bouncing ball
+  treasure:()=>{tone(988,0,.08,"square",.06);tone(1319,.08,.35,"square",.06)}                                               // coin
+};
+function stickerSound(e){
+  if(!S.sfx) return;
+  const info=STICKER_INFO[e]; if(!info) return SFX.step(Math.floor(Math.random()*7));
+  (STICKER_SOUNDS[info.page.id]||SFX.added)();
+  if(info.tier!=="c") [2093,2637,3136,4186].forEach((f,i)=>tone(f,.15+i*.06,.25,"sine",info.tier==="g"?.07:.045)); // extra sparkle for rare
+  if(info.tier==="g") [1047,1319,1568].forEach(f=>tone(f,.4,.7,"triangle",.05));
+}
+
 // ---------- Rewards: themed sticker pages with rarity, plus trophies ----------
 const STICKER_PAGES=[
   {id:"pets",name:"Pets & Farm",icon:"🐾",c:["🐶","🐱","🐭","🐹","🐰","🐮","🐷","🐔","🐣","🐥","🦆","🐴","🐑","🐐","🐓","🐇"],r:["🦙","🦔","🦢"],g:["🦚"]},
@@ -776,7 +818,7 @@ function stickerBook(){
   const c=stickerCounts(), n=Object.keys(c).filter(e=>STICKER_INFO[e]).length;
   const defs=trophyDefs(), tr=S.trophies||{}, nt=defs.filter(d=>tr[d.id]).length;
   const slot=(e,t)=>c[e]
-    ?`<button class="slot t${t}" aria-label="sticker">${e}${c[e]>1?`<span class="n">×${c[e]}</span>`:""}</button>`
+    ?`<button class="slot t${t}" data-e="${e}" aria-label="sticker">${e}${c[e]>1?`<span class="n">×${c[e]}</span>`:""}</button>`
     :`<div class="slot empty t${t}" aria-hidden="true">?</div>`;
   const stickersHTML=`
     <p class="sub">${n} of ${STICKERS.length} collected. Finish a game to win a sticker!</p>
@@ -802,7 +844,7 @@ function stickerBook(){
   $("#back").onclick=home;
   app.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{SB_TAB=b.dataset.tab;stickerBook()});
   app.querySelectorAll("button.slot").forEach((b,i)=>b.onclick=()=>{
-    b.classList.remove("wig"); void b.offsetWidth; b.classList.add("wig"); SFX.step(i);
+    b.classList.remove("wig"); void b.offsetWidth; b.classList.add("wig"); stickerSound(b.dataset.e);
   });
 }
 // ---------- Insights: which sounds / word types he finds harder ----------
@@ -1015,6 +1057,7 @@ function finish(){
   </div>`;
   SFX.done(); confetti(); queueSync();
   const bk=$("#book"); if(bk) bk.onclick=stickerBook;
+  const big=app.querySelector(".done .sticker"); if(big&&st){big.style.cursor="pointer";big.onclick=()=>{big.classList.remove("wig");void big.offsetWidth;big.classList.add("wig");stickerSound(st.e)}}
   const pops=[];
   if(st&&st.tier!=="c") pops.push({icon:st.e,cls:st.tier==="g"?"gold":"silver",kicker:st.tier==="g"?"Super rare sticker!":"Rare sticker!",
     title:st.isNew?"A new one!":"Another one!",text:(st.tier==="g"?"Super rare stickers hardly ever turn up. ":"Rare stickers don't come along very often. ")+"This one goes on the "+st.page.name+" page."});
