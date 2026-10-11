@@ -194,7 +194,8 @@ button:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
   padding:3px 14px;border:3px solid #1B1F3B;border-radius:10px;box-shadow:0 3px 0 #1B1F3B;transform:rotate(2deg)}
 .lg-c{position:absolute;z-index:1}
 .lg-al{width:74px;left:-8px;bottom:-14px;transform:rotate(-10deg)}
-.lg-ch{width:70px;right:-6px;bottom:-12px;transform:rotate(10deg)}
+.lg-ch{width:70px;right:-6px;bottom:-12px;transform:rotate(10deg);animation:lgrock 2.6s ease-in-out infinite}
+@keyframes lgrock{0%,100%{transform:rotate(10deg) translateY(0)}30%{transform:rotate(18deg) translateY(-5px)}60%{transform:rotate(4deg) translateY(-2px)}}
 .lg-sp{width:52px;right:14px;top:10px;transform:rotate(8deg);animation:bob 2.8s ease-in-out infinite}
 .lg-al{animation:lgbob 3.2s ease-in-out infinite}
 @keyframes lgbob{0%,100%{transform:rotate(-10deg) translateY(0)}50%{transform:rotate(-6deg) translateY(-6px)}}
