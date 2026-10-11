@@ -178,6 +178,44 @@ button:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
 .stage.is-tricky::before{content:"🔁 Tricky one";position:absolute;top:12px;left:14px;font-size:.85rem;font-weight:700;color:var(--muted);
   background:var(--card);border:2px solid var(--edge);border-radius:999px;padding:2px 10px}
 .m-alien.is-tricky::before{color:var(--ink)}
+/* Rewards */
+.slot.tr{border-color:#7D8FB8;background:linear-gradient(160deg,#F4F7FF,#D3DCEF)}
+.slot.tg{border-color:#B98500;background:linear-gradient(160deg,#FFF6C8,#FFCF3F)}
+.slot.empty.tr{background:transparent;border-color:#7D8FB8;color:#7D8FB8}
+.slot.empty.tg{background:transparent;border-color:#B98500;color:#B98500}
+.kb{display:inline-block;width:14px;height:14px;border-radius:4px;margin-right:6px;vertical-align:-2px;border:2px solid var(--edge)}
+.kb.tr{background:linear-gradient(160deg,#F4F7FF,#D3DCEF)} .kb.tg{background:linear-gradient(160deg,#FFF6C8,#FFCF3F)}
+.pghead{display:flex;justify-content:space-between;align-items:center;font-size:1.15rem;margin:26px 0 10px}
+.pghead span:last-child{color:var(--muted);font-size:1rem}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0 8px}
+.tabs .chip{font-weight:700}
+.tgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px}
+.tcard{background:var(--card);border:3px solid var(--edge);border-radius:18px;padding:14px 10px;text-align:center;box-shadow:0 3px 0 var(--edge)}
+.tcard .ti{font-size:2.6rem;line-height:1.1}
+.tcard h4{margin:6px 0 3px;font-size:1.02rem}
+.tcard p{margin:0;font-size:.85rem;color:var(--muted);line-height:1.3}
+.tcard .td{margin-top:6px;font-weight:700}
+.tcard.special:not(.locked){background:linear-gradient(160deg,#FFF6C8,#FFCF3F)}
+.tcard.special:not(.locked) h4,.tcard.special:not(.locked) p{color:#3A2A00}
+.tcard.locked{box-shadow:none;border-style:dashed;background:transparent}
+.tcard.locked .ti{filter:grayscale(1);opacity:.35}
+.earned.tr{color:#5B6E9C} .earned.tg{color:#B98500}
+.done .sticker.tr,.done .sticker.tg{border-radius:50%;padding:14px;border:4px solid var(--edge)}
+.done .sticker.tr{background:linear-gradient(160deg,#F4F7FF,#D3DCEF)}
+.done .sticker.tg{background:linear-gradient(160deg,#FFF6C8,#FFCF3F)}
+.pop-bg{position:fixed;inset:0;background:rgba(10,14,40,.55);display:grid;place-items:center;z-index:20;padding:20px;animation:fadein .2s ease}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+.pop{background:var(--card);border:4px solid var(--edge);border-radius:28px;box-shadow:0 8px 0 var(--edge);padding:26px 22px;text-align:center;max-width:340px;width:100%;animation:popin .45s cubic-bezier(.2,1.4,.4,1)}
+@keyframes popin{from{transform:scale(.6);opacity:0}to{transform:none;opacity:1}}
+.pop .pi{font-size:5.5rem;line-height:1;display:inline-block;animation:wig 1s ease .35s}
+.pop .pk{font-weight:700;color:var(--orange);font-size:1.05rem;margin-top:10px;text-transform:uppercase;letter-spacing:.05em}
+.pop h2{margin:4px 0 8px;font-size:1.8rem}
+.pop p{color:var(--muted);margin:0 0 20px;font-size:1.1rem;line-height:1.4}
+.pop.gold{background:linear-gradient(160deg,#FFF6C8,#FFCF3F)}
+.pop.silver{background:linear-gradient(160deg,#F4F7FF,#D3DCEF)}
+.pop.gold h2,.pop.gold p,.pop.silver h2,.pop.silver p{color:#2A2A3A}
+.pop.gold .pk{color:#8A5A00} .pop.silver .pk{color:#3E5288}
+@media (prefers-reduced-motion:reduce){.pop,.pop .pi,.pop-bg{animation:none}}
 /* Add words */
 .seg{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:18px 0 14px}
 .seg button{background:var(--card);border-radius:14px;padding:12px 6px;font-size:1.1rem;font-weight:700}
@@ -276,7 +314,7 @@ let S=load(); S.p=S.p||{}; S.levels=S.levels||{}; S.head=!!S.head; S.custom=Arra
 if(S.sfx===undefined) S.sfx=true;
 S.group=S.group||"From school"; S.addType=S.addType||"green";
 S.h=S.h&&typeof S.h==="object"?S.h:{};
-S.stickers=Array.isArray(S.stickers)?S.stickers:[];
+S.stickers=Array.isArray(S.stickers)?S.stickers:[]; S.trophies=S.trophies&&typeof S.trophies==="object"?S.trophies:{};
 S.deleted=S.deleted&&typeof S.deleted==="object"?S.deleted:{}; S.resetAt=S.resetAt||0; // [{e:emoji,t:time}] // history: {id:{g:gotCount,a:againCount,t:lastTime}}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 
@@ -348,6 +386,7 @@ const SFX={
   },
   again:()=>{tone(392,0,.15,"sine",.11);tone(330,.11,.2,"sine",.09)},
   done:()=>[523,659,784,1047,1319].forEach((f,i)=>tone(f,i*.1,.35,"triangle",.13)),
+  trophy:()=>{[523,659,784,1047,1319,1568].forEach((f,i)=>tone(f,i*.08,.3,"triangle",.13));[1047,1319,1568].forEach(f=>tone(f,.55,.9,"sine",.08))},
   added:()=>tone(880,0,.1,"sine",.12)
 };
 // Warm audio up on any tap, every time, so it recovers after iOS pauses it
@@ -450,13 +489,89 @@ const CHEEKY_SVG=`<svg class="alien-pic" viewBox="0 0 100 100" aria-hidden="true
 <ellipse cx="52" cy="76" rx="5" ry="3.2" fill="#FF8FB8"/></svg>`;
 const CHAR={green:SPROUT_SVG,red:CHEEKY_SVG,alien:ALIEN_SVG};
 
-const STICKERS=["🦖","🦕","🐙","🦄","🐢","🦁","🐯","🐼","🐨","🐸","🦊","🐳","🦈","🐬","🦋","🐝","🐞","🦉","🐧","🦜","🚀","🛸","🌈","⭐","🌙","🪐","☄️","🚒","🚜","🚂","🏎️","🚁","⚽","🏆","🎈","🍦","🍕","🧁","🍓","🍉"];
+// ---------- Rewards: themed sticker pages with rarity, plus trophies ----------
+const STICKER_PAGES=[
+  {id:"pets",name:"Pets & Farm",icon:"🐾",c:["🐶","🐱","🐭","🐹","🐰","🐮","🐷","🐔","🐣","🐥","🦆","🐴","🐑","🐐","🐓","🐇"],r:["🦙","🦔","🦢"],g:["🦚"]},
+  {id:"wild",name:"Wild Animals",icon:"🦁",c:["🦁","🐯","🐼","🐨","🐸","🦊","🐻","🐒","🦒","🦓","🐘","🦛","🦏","🐪","🦘","🐊","🐍","🦎","🦥","🦦"],r:["🦧","🐆","🦬"],g:["🦣"]},
+  {id:"ocean",name:"Ocean",icon:"🌊",c:["🐳","🐋","🐬","🐟","🐠","🐡","🦈","🐙","🦑","🦀","🦞","🦐","🐚","🐢"],r:["🦭","🪸","🏝️"],g:["🪼"]},
+  {id:"bugs",name:"Bugs & Birds",icon:"🦋",c:["🦋","🐝","🐞","🐛","🐜","🦗","🐌","🐦","🐤","🦉","🐧","🦜","🦅","🦇","🕊️"],r:["🦩","🪲","🕷️"],g:["🦤"]},
+  {id:"magic",name:"Dinos & Magic",icon:"🦖",c:["🦖","🦕","🥚","🌋","🦴","🍄","🔮","🪄","🏰","🗝️"],r:["🐲","👻","👽"],g:["🦄","🐉"]},
+  {id:"space",name:"Space",icon:"🚀",c:["🚀","🛸","🌙","⭐","🪐","☄️","🌍","🌞","🌟","🔭","🌛","🌕"],r:["🛰️","🌠","👾"],g:["🌌"]},
+  {id:"nature",name:"Weather & Nature",icon:"🌈",c:["🌈","☀️","⛅","🌧️","⛈️","❄️","☃️","⛄","🌪️","🌊","🌸","🌻","🌷","🌵","🌴","🍁","🍂","🌲","🌳"],r:["⚡","🌺","🪷"],g:["🍀"]},
+  {id:"vehicles",name:"Vehicles",icon:"🚒",c:["🚗","🚕","🚙","🚌","🏎️","🚓","🚑","🚒","🚐","🛻","🚚","🚜","🛵","🏍️","🚲","🛴","🚂","🚆","🚁","✈️","🚤","⛵","🚢"],r:["🛩️","🚠","🛶"],g:["🚅"]},
+  {id:"food",name:"Food",icon:"🍕",c:["🍕","🍦","🧁","🍓","🍉","🍎","🍌","🍇","🍒","🍑","🍍","🥝","🥕","🌽","🥦","🍔","🌭","🍟","🥞","🧇","🍪","🍩","🍫","🍭","🍬","🥨","🧀","🍿"],r:["🍰","🍯","🍨"],g:["🎂"]},
+  {id:"play",name:"Sport & Play",icon:"⚽",c:["⚽","🏀","🏈","⚾","🎾","🏐","🏉","🏓","🏸","⛳","🛹","🛼","🎈","🪁","🎨","🎸","🥁","🎹","🧸","🪀","🎲","🧩","🎯"],r:["🏅","🎪","🎠"],g:["🏆"]},
+  {id:"treasure",name:"Treasure",icon:"💎",c:["🗺️","🧭","⚓","🔑","🎁","🏺","🪙","💰"],r:["💎","🧰","🔦"],g:["👑"]}
+];
+// "🌊" appears on two pages; keep the first so every sticker has one home
+const STICKER_INFO={}, TIER={c:[],r:[],g:[]};
+STICKER_PAGES.forEach(pg=>["c","r","g"].forEach(t=>{pg[t]=pg[t].filter(e=>!STICKER_INFO[e]);pg[t].forEach(e=>{STICKER_INFO[e]={page:pg,tier:t};TIER[t].push(e)})}));
+const STICKERS=[...TIER.c,...TIER.r,...TIER.g];
+const RARITY={g:0.03,r:0.15}; // 3% super rare, 15% rare, the rest common
 function stickerCounts(){const c={};S.stickers.forEach(x=>c[x.e]=(c[x.e]||0)+1);return c}
-function awardSticker(){
-  const c=stickerCounts(), fresh=STICKERS.filter(e=>!c[e]);
-  const pool=fresh.length?fresh:STICKERS, e=pool[Math.floor(Math.random()*pool.length)];
-  S.stickers.push({e,t:Date.now()}); save();
-  return {e,isNew:!c[e]};
+function awardSticker(meta){
+  const c=stickerCounts(), roll=Math.random();
+  const tier=roll<RARITY.g?"g":roll<RARITY.g+RARITY.r?"r":"c";
+  const pool=TIER[tier], fresh=pool.filter(e=>!c[e]), from=fresh.length?fresh:pool;
+  const e=from[Math.floor(Math.random()*from.length)];
+  S.stickers.push({e,t:Date.now(),...(meta||{})}); save();
+  return {e,isNew:!c[e],tier,page:STICKER_INFO[e].page};
+}
+function allGot(items){return !!(items&&items.length)&&items.every(it=>S.p[it.id]==="got")}
+function tstats(){
+  const st=S.stickers;
+  let words=0; for(const id in S.h){const it=ALL[id]; if(it&&it.str) words+=S.h[id].g||0}
+  return {sessions:st.length, days:new Set(st.map(x=>new Date(x.t).toDateString())).size,
+    perfect:st.filter(x=>x.n>=8&&x.got===x.n).length, words, comebacks:S.comebacks||0};
+}
+function trophyDefs(){
+  const T=[
+    {id:"first",icon:"🎉",name:"First go!",desc:"Finished a first practice session",check:t=>t.sessions>=1},
+    {id:"ses10",icon:"🥉",name:"10 sessions",desc:"Finished 10 practice sessions",check:t=>t.sessions>=10},
+    {id:"ses50",icon:"🥈",name:"50 sessions",desc:"Finished 50 practice sessions",check:t=>t.sessions>=50},
+    {id:"ses100",icon:"🥇",name:"100 sessions",desc:"Finished 100 practice sessions",check:t=>t.sessions>=100,special:1},
+    {id:"day5",icon:"📅",name:"5 practice days",desc:"Practised on 5 different days",check:t=>t.days>=5},
+    {id:"day20",icon:"🗓️",name:"20 practice days",desc:"Practised on 20 different days",check:t=>t.days>=20},
+    {id:"day50",icon:"🌟",name:"50 practice days",desc:"Practised on 50 different days",check:t=>t.days>=50,special:1},
+    {id:"w50",icon:"📖",name:"50 words",desc:"Read 50 words correctly",check:t=>t.words>=50},
+    {id:"w100",icon:"📚",name:"100 words",desc:"Read 100 words correctly",check:t=>t.words>=100},
+    {id:"w250",icon:"🎓",name:"250 words",desc:"Read 250 words correctly",check:t=>t.words>=250,special:1},
+    {id:"perf1",icon:"💯",name:"Perfect session",desc:"Got every card right in a session of 8 or more",check:t=>t.perfect>=1},
+    {id:"perf5",icon:"✨",name:"5 perfect sessions",desc:"Had 5 perfect sessions",check:t=>t.perfect>=5},
+    {id:"back1",icon:"💪",name:"Comeback!",desc:"Got a word right that used to be tricky",check:t=>t.comebacks>=1},
+    {id:"back10",icon:"🦸",name:"Super comeback",desc:"Got 10 tricky words right in the end",check:t=>t.comebacks>=10},
+    {id:"snd1",icon:"🔤",name:"Set 1 sounds",desc:"Knows every Set 1 Speed Sound",check:()=>allGot(ITEMS.sounds.s1)},
+    {id:"snd2",icon:"🔠",name:"Set 2 sounds",desc:"Knows every Set 2 Speed Sound",check:()=>allGot(ITEMS.sounds.s2)},
+    {id:"snd3",icon:"🏅",name:"Set 3 sounds",desc:"Knows every Set 3 Speed Sound",check:()=>allGot(ITEMS.sounds.s3),special:1},
+    {id:"y1",icon:"🧠",name:"Year 1 tricky words",desc:"Knows all 45 Year 1 exception words",check:()=>allGot(ITEMS.red.y1),special:1}
+  ];
+  for(const lv in SCHOOL.green) T.push({id:"pack_"+lv,icon:"🎒",name:LEVEL_NAMES[lv]+" pack",desc:"Got every "+LEVEL_NAMES[lv]+" green word",check:()=>allGot(ITEMS.green[lv])});
+  const c=stickerCounts();
+  STICKER_PAGES.forEach(pg=>T.push({id:"page_"+pg.id,icon:pg.icon,name:pg.name+" page",desc:"Collected every sticker on the "+pg.name+" page",
+    check:()=>[...pg.c,...pg.r,...pg.g].every(e=>c[e]),special:1}));
+  return T;
+}
+function checkTrophies(){
+  S.trophies=S.trophies||{};
+  const t=tstats(), out=[];
+  for(const d of trophyDefs()) if(!S.trophies[d.id]&&d.check(t)){S.trophies[d.id]=Date.now();out.push(d)}
+  if(out.length) save();
+  return out;
+}
+// Celebration popups, shown one after another
+const POPQ=[]; let popOpen=false;
+function celebrate(list){POPQ.push(...list); if(!popOpen) nextPop()}
+function nextPop(){
+  const x=POPQ.shift(); if(!x){popOpen=false;return}
+  popOpen=true;
+  const bg=document.createElement("div"); bg.className="pop-bg";
+  bg.innerHTML=`<div class="pop ${x.cls||""}" role="dialog" aria-modal="true" aria-label="${esc(x.kicker)}">
+    <div class="pi" aria-hidden="true">${x.icon}</div><div class="pk">${esc(x.kicker)}</div>
+    <h2>${esc(x.title)}</h2><p>${esc(x.text)}</p><button class="go pop-ok">Yay!</button></div>`;
+  document.body.appendChild(bg);
+  SFX.trophy(); confetti();
+  const ok=bg.querySelector(".pop-ok"); ok.focus();
+  ok.onclick=()=>{bg.remove(); setTimeout(nextPop,250)};
 }
 // Tricky items (marked "again later") to slip into a session, preferring ones not seen today
 function pickTricky(mode,exclude,n){
@@ -488,7 +603,7 @@ function home(){
       </button>`:""}
     <button class="act" id="stk">
       <span class="sw" style="font-size:1.7rem">${S.stickers.length?S.stickers[S.stickers.length-1].e:"⭐"}</span>
-      <span><h2>Sticker book</h2><p>${Object.keys(stickerCounts()).length} of ${STICKERS.length} collected</p></span>
+      <span><h2>Stickers & trophies</h2><p>${Object.keys(stickerCounts()).filter(e=>STICKER_INFO[e]).length} stickers, ${Object.keys(S.trophies||{}).length} trophies</p></span>
     </button>
     <button class="act" id="prog">
       <span class="sw" style="background:var(--green)">✓</span>
@@ -618,21 +733,40 @@ function dayLabel(ts){
   return d.toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long"});
 }
 function chip(it,extra){return `<span class="wchip ro ${it.mode}">${esc(wordText(it))}${extra||""}</span>`}
+let SB_TAB="stickers";
 function stickerBook(){
   VIEW=stickerBook; CUR=null;
-  const c=stickerCounts(), n=Object.keys(c).length;
+  const c=stickerCounts(), n=Object.keys(c).filter(e=>STICKER_INFO[e]).length;
+  const defs=trophyDefs(), tr=S.trophies||{}, nt=defs.filter(d=>tr[d.id]).length;
+  const slot=(e,t)=>c[e]
+    ?`<button class="slot t${t}" aria-label="sticker">${e}${c[e]>1?`<span class="n">×${c[e]}</span>`:""}</button>`
+    :`<div class="slot empty t${t}" aria-hidden="true">?</div>`;
+  const stickersHTML=`
+    <p class="sub">${n} of ${STICKERS.length} collected. Finish a game to win a sticker!</p>
+    <div class="key"><span><b class="kb tr"></b>Rare</span><span><b class="kb tg"></b>Super rare</span></div>
+    ${STICKER_PAGES.map(pg=>{
+      const all=[...pg.c,...pg.r,...pg.g], have=all.filter(e=>c[e]).length;
+      return `<h3 class="pghead"><span>${pg.icon} ${esc(pg.name)}</span><span>${have===all.length?"✅ ":""}${have}/${all.length}</span></h3>
+        <div class="sgrid">${pg.c.map(e=>slot(e,"c")).join("")}${pg.r.map(e=>slot(e,"r")).join("")}${pg.g.map(e=>slot(e,"g")).join("")}</div>`;
+    }).join("")}`;
+  const trophiesHTML=`
+    <p class="sub">${nt} of ${defs.length} earned. Grey ones are still to win!</p>
+    <div class="tgrid">${defs.map(d=>{const got=tr[d.id];
+      return `<div class="tcard ${got?"":"locked"} ${d.special?"special":""}"><div class="ti" aria-hidden="true">${d.icon}</div>
+        <h4>${esc(d.name)}</h4><p>${esc(d.desc)}</p>${got?`<p class="td">${dayLabel(got)}</p>`:""}</div>`}).join("")}</div>`;
   app.innerHTML=`
   <div class="bar"><button class="back" id="back">‹ Home</button></div>
-  <h1 class="title">Sticker book</h1>
-  <p class="sub">${n} of ${STICKERS.length} collected. Finish a game to win a sticker!</p>
-  <div class="sgrid">${STICKERS.map(e=>c[e]
-    ?`<button class="slot" aria-label="sticker">${e}${c[e]>1?`<span class="n">×${c[e]}</span>`:""}</button>`
-    :`<div class="slot empty" aria-hidden="true">?</div>`).join("")}</div>`;
+  <h1 class="title">Stickers & trophies</h1>
+  <div class="tabs" role="tablist">
+    <button class="chip" data-tab="stickers" aria-pressed="${SB_TAB==="stickers"}">Stickers (${n})</button>
+    <button class="chip" data-tab="trophies" aria-pressed="${SB_TAB==="trophies"}">Trophies (${nt})</button>
+  </div>
+  ${SB_TAB==="stickers"?stickersHTML:trophiesHTML}`;
   $("#back").onclick=home;
+  app.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{SB_TAB=b.dataset.tab;stickerBook()});
   app.querySelectorAll("button.slot").forEach((b,i)=>b.onclick=()=>{
     b.classList.remove("wig"); void b.offsetWidth; b.classList.add("wig"); SFX.step(i);
   });
-  window.scrollTo(0,0);
 }
 // ---------- Insights: which sounds / word types he finds harder ----------
 function featuresOf(it){
@@ -803,7 +937,9 @@ function card(anim=true){
 }
 
 function mark(r){
-  const it=P.deck[P.i]; S.p[it.id]=r;
+  const it=P.deck[P.i];
+  if(r==="got"&&S.p[it.id]==="again") S.comebacks=(S.comebacks||0)+1;
+  S.p[it.id]=r;
   const h=S.h[it.id]||(S.h[it.id]={g:0,a:0}); h[r==="got"?"g":"a"]++; h.t=Date.now();
   save();
   (r==="got"?P.got:P.again).push(it);
@@ -825,22 +961,28 @@ function confetti(){
 function finish(){
   CUR=null;
   const more=P.off<P.pool.length, g=P.got.length, a=P.again.length;
-  const st=P.i>=P.deck.length&&P.deck.length?awardSticker():null;
+  const st=P.i>=P.deck.length&&P.deck.length?awardSticker({n:P.deck.length,got:g}):null;
+  const newT=st?checkTrophies():[];
   app.innerHTML=`
   <div class="done">
-    ${st?`<div class="star sticker" aria-hidden="true">${st.e}</div><div class="earned">${st.isNew?"New sticker!":"Another one!"}</div>`:`<div class="star" aria-hidden="true">⭐</div>`}
+    ${st?`<div class="star sticker t${st.tier}" aria-hidden="true">${st.e}</div><div class="earned t${st.tier}">${st.tier==="g"?"Super rare sticker!":st.tier==="r"?"Rare sticker!":st.isNew?"New sticker!":"Another one!"}</div>`:`<div class="star" aria-hidden="true">⭐</div>`}
     <h2>${a===0&&g>0?"Brilliant!":"Well done!"}</h2>
     <p>${g} got it${a?`, ${a} to try again`:""}</p>
     ${a?`<div class="missed">${P.again.map(it=>`<span>${esc(wordText(it))}</span>`).join("")}</div>`:""}
     <div class="stack">
       ${a?`<button class="go" id="retry">Try those ${a} again</button>`:""}
       ${more?`<button class="ghost" id="more">${SESSION} more</button>`:""}
-      ${st?`<button class="ghost" id="book">Sticker book</button>`:""}
+      ${st?`<button class="ghost" id="book">Stickers & trophies</button>`:""}
       <button class="ghost" id="home">Home</button>
     </div>
   </div>`;
   SFX.done(); confetti(); queueSync();
   const bk=$("#book"); if(bk) bk.onclick=stickerBook;
+  const pops=[];
+  if(st&&st.tier!=="c") pops.push({icon:st.e,cls:st.tier==="g"?"gold":"silver",kicker:st.tier==="g"?"Super rare sticker!":"Rare sticker!",
+    title:st.isNew?"A new one!":"Another one!",text:(st.tier==="g"?"Super rare stickers hardly ever turn up. ":"Rare stickers don't come along very often. ")+"This one goes on the "+st.page.name+" page."});
+  newT.forEach(d=>pops.push({icon:d.icon,cls:d.special?"gold":"",kicker:"New trophy!",title:d.name,text:d.desc+"!"}));
+  if(pops.length) setTimeout(()=>celebrate(pops),900);
   const rt=$("#retry"); if(rt) rt.onclick=()=>start(P.again,P.label);
   const mo=$("#more"); if(mo) mo.onclick=nextBatch;
   $("#home").onclick=home;
@@ -850,7 +992,7 @@ function finish(){
 // ---------- Family sync (Supabase) ----------
 const SB_URL="https://auxgkypuiiqvujbacbvy.supabase.co";
 const SB_KEY="sb_publishable_NmopGRSY8WU82P_ciex-_g_lO0aD2LQ";
-const SYNC_KEYS=["custom","p","h","stickers","deleted","resetAt"];
+const SYNC_KEYS=["custom","p","h","stickers","deleted","resetAt","trophies","comebacks"];
 const SYNC={state:S.family?"idle":"off"};
 let VIEW=null, syncing=false, syncAgain=false, syncTimer=null;
 
@@ -880,6 +1022,8 @@ function mergeData(L,R){
   out.p=p;
   const sm={}; [...(R.stickers||[]),...(L.stickers||[])].forEach(x=>sm[x.e+"|"+x.t]=x);
   out.stickers=Object.values(sm).sort((a,b)=>a.t-b.t);
+  const tr={...(R.trophies||{})}; for(const k in (L.trophies||{})) tr[k]=tr[k]?Math.min(tr[k],L.trophies[k]):L.trophies[k];
+  out.trophies=tr; out.comebacks=Math.max(L.comebacks||0,R.comebacks||0);
   return out;
 }
 async function syncNow(){
@@ -966,6 +1110,8 @@ window.addEventListener("online",syncNow);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)syncNow()});
 setTimeout(syncNow,600);
 
+// Quietly award trophies already earned before this feature existed
+if(!S.tInit){checkTrophies(); S.tInit=1; save()}
 home();
 if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))}
 </script>
