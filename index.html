@@ -83,6 +83,7 @@ button:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
 .chips{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 6px}
 .ghead{font-size:1rem;color:var(--muted);margin:22px 0 10px;font-weight:700}
 .chip{background:var(--card);border-radius:999px;padding:10px 18px;font-size:1.1rem}
+.cset{display:block;font-size:.78rem;font-weight:700;opacity:.7;margin-top:1px;line-height:1.1}
 .chip[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
 .go{width:100%;border-radius:18px;padding:18px;font-size:1.35rem;font-weight:700;color:#fff;background:var(--green)}
 .go:disabled{opacity:.45}
@@ -158,6 +159,12 @@ button:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
 .pill[data-s="error"]{background:var(--orange);color:#fff}
 .codebox{margin-top:22px;text-align:center;font-size:clamp(1.8rem,9vw,2.6rem);font-weight:700;letter-spacing:.06em;
   background:var(--card);border:3px solid var(--edge);border-radius:20px;box-shadow:0 5px 0 var(--edge);padding:18px 10px;user-select:all}
+/* Insights */
+.ins{display:flex;align-items:center;gap:12px;background:var(--card);border:3px solid var(--edge);border-radius:16px;padding:12px 14px;margin:10px 0;box-shadow:0 3px 0 var(--edge)}
+.ins-t{flex:1;font-size:1rem;line-height:1.4}
+.ins-t b{font-size:1.2rem;color:var(--blue-ink)}
+.ins-b{flex:none;border:3px solid var(--edge);background:var(--green);color:#fff;border-radius:12px;padding:8px 12px;font-weight:700;box-shadow:0 3px 0 var(--edge)}
+.ins-b:active{transform:translateY(2px);box-shadow:0 1px 0 var(--edge)}
 /* Stickers */
 .earned{font-size:1.4rem;font-weight:700;color:var(--orange);margin-top:4px}
 .done .sticker{font-size:6rem}
@@ -246,6 +253,8 @@ const SCHOOL = {
   red:{dt:["the", "I", "my", "no"],rd:["put", "for", "of", "he"],gr:["your", "said", "you", "be", "are"]}
 };
 
+// Which sound sets each school reading group uses
+const LEVEL_SETS = {dt:"Set 1",rd:"Set 1",gr:"Sets 1–2"};
 const LEVEL_NAMES = {y1:"Year 1 list",dt:"Ditty",rd:"Red Ditty",gr:"Green",s1:"Set 1",sf:"Special friends",s2:"Set 2",s3:"Set 3",all:"All red words"};
 const ACTS = {
   sounds:{name:"Speed Sounds",desc:"Say the sound on the card",sw:"var(--blue)",icon:"sh",levels:["s1","sf","s2","s3"],
@@ -525,7 +534,7 @@ function setup(k){
     <p class="hint">${a.help}</p>
     ${[["From school",a.school||[]],[k==="sounds"?"Sound sets":"Extra practice",a.levels],["Your words",lvls.filter(l=>l.startsWith("c:"))]]
       .filter(([,ls])=>ls.length).map(([h,ls])=>`<h3 class="ghead">${h}</h3>
-      <div class="chips">${ls.map(l=>`<button class="chip" data-l="${esc(l)}" aria-pressed="${sel.includes(l)}">${esc(levelName(l))}</button>`).join("")}</div>`).join("")}
+      <div class="chips">${ls.map(l=>`<button class="chip" data-l="${esc(l)}" aria-pressed="${sel.includes(l)}">${esc(levelName(l))}${LEVEL_SETS[l]?`<span class="cset">${LEVEL_SETS[l]}</span>`:""}</button>`).join("")}</div>`).join("")}
     <div style="height:14px"></div>
     <button class="go" id="go" ${sel.length?"":"disabled"} style="background:${a.sw}">Start</button>`;
     $("#back").onclick=home;
@@ -625,9 +634,51 @@ function stickerBook(){
   });
   window.scrollTo(0,0);
 }
+// ---------- Insights: which sounds / word types he finds harder ----------
+function featuresOf(it){
+  if(!it.str) return [];
+  const f=parse(it.str);
+  const gs=f.sounds.map(ix=>ix.length===2?f.tokens[ix[0]].g+"-"+f.tokens[ix[1]].g:f.tokens[ix[0]].g).filter(g=>/^[a-z-]+$/.test(g));
+  const feats=new Set(gs.map(g=>"g:"+g)), C=/^[bcdfghjklmnpqrstvwxyz]$/;
+  for(let i=0;i<gs.length-1;i++) if(C.test(gs[i])&&C.test(gs[i+1])){feats.add("blend");break}
+  if(f.sounds.length>=5) feats.add("long");
+  return [...feats];
+}
+function insights(){
+  const stat={}, sp={}; let tot=0, miss=0;
+  for(const id in S.h){
+    const it=ALL[id], h=S.h[id]; if(!it) continue;
+    const n=(h.g||0)+(h.a||0), a=h.a||0; if(!n) continue;
+    if(it.mode==="sounds"){const s=sp[it.g]||(sp[it.g]={n:0,a:0}); s.n+=n; s.a+=a; continue}
+    if(!it.str) continue;
+    tot+=n; miss+=a;
+    for(const f of featuresOf(it)){const s=stat[f]||(stat[f]={n:0,a:0,w:0}); s.n+=n; s.a+=a; s.w++}
+  }
+  const base=tot?miss/tot:0, out=[];
+  for(const f in stat){
+    const s=stat[f], r=s.a/s.n;
+    if(s.w<3||s.n<5||s.a<3||r<Math.max(base*1.5,0.3)) continue;
+    const g=f.startsWith("g:")?f.slice(2):null, spc=g&&sp[g], spT=!!(spc&&spc.a>=2&&spc.a/spc.n>=0.4);
+    const label=g?`Words with <b>${esc(g)}</b>`:f==="blend"?`Words with blends like <b>fr</b>, <b>st</b>, <b>mp</b>`:`Longer words (<b>5+</b> sounds)`;
+    out.push({key:f,score:(r-base)*Math.sqrt(s.n)+(spT?0.5:0),short:g||(f==="blend"?"blends":"longer words"),
+      html:`${label}: missed ${Math.round(r*100)}% of the time, compared with ${Math.round(base*100)}% overall.${spT?` The <b>${esc(g)}</b> Speed Sounds card is tricky too.`:""}`});
+  }
+  for(const g in sp){
+    const s=sp[g]; if(s.n<3||s.a<2||s.a/s.n<0.4||out.some(o=>o.key==="g:"+g)) continue;
+    out.push({key:"g:"+g,score:(s.a/s.n)*Math.sqrt(s.n)*0.8,short:g,html:`The <b>${esc(g)}</b> Speed Sounds card: missed ${s.a} of ${s.n} times.`});
+  }
+  out.sort((a,b)=>b.score-a.score);
+  return {list:out.slice(0,3),enough:tot>=30};
+}
+function itemsFor(key){
+  const g=key.startsWith("g:")?key.slice(2):null, all=Object.values(ALL);
+  const cards=g?all.filter(it=>it.mode==="sounds"&&it.g===g):[];
+  return [...cards,...all.filter(it=>(it.mode==="green"||it.mode==="alien")&&featuresOf(it).includes(key))];
+}
+
 function progressScreen(){
   VIEW=progressScreen; CUR=null;
-  const again=againList();
+  const again=againList(), INS=insights();
   const hist=Object.entries(S.h).filter(([id])=>ALL[id]);
   const last=hist.reduce((m,[,h])=>Math.max(m,h.t||0),0);
   const missed=hist.filter(([,h])=>h.a>0).sort((x,y)=>y[1].a-x[1].a||(y[1].t||0)-(x[1].t||0)).slice(0,12);
@@ -645,6 +696,13 @@ function progressScreen(){
   <div class="bar"><button class="back" id="back">‹ Home</button></div>
   <h1 class="title">Progress</h1>
   <p class="sub">${last?`Last practised ${dayLabel(last)}`:"Nothing practised yet. Start with Speed Sounds."}</p>
+
+  <div class="psec">
+    <h2>Patterns</h2>
+    <p class="hint">Sounds and word types he's finding harder than usual. Hints worth checking, not a diagnosis.</p>
+    ${INS.list.length?INS.list.map((x,i)=>`<div class="ins"><div class="ins-t">${x.html}</div><button class="ins-b" data-ins="${i}">Practise ${esc(x.short)}</button></div>`).join("")
+      :`<p class="hint">${INS.enough?"Nothing stands out right now.":"Patterns will appear after a few more sessions."}</p>`}
+  </div>
 
   <div class="psec">
     <h2>Still tricky (${again.length})</h2>
@@ -669,6 +727,7 @@ function progressScreen(){
   <div class="foot"><button class="link" id="reset">Reset progress</button></div>`;
   $("#back").onclick=home;
   const pr=$("#practise"); if(pr) pr.onclick=()=>start(again,"Practise again");
+  app.querySelectorAll("[data-ins]").forEach(b=>b.onclick=()=>{const x=INS.list[+b.dataset.ins]; start(itemsFor(x.key),"Practise "+x.short)});
   $("#reset").onclick=()=>{if(confirm("Clear all progress and history? Your added words stay.")){S.p={};S.h={};S.resetAt=Date.now();save();queueSync();progressScreen()}};
   window.scrollTo(0,0);
 }
@@ -676,7 +735,7 @@ function progressScreen(){
 function start(items,label){
   items=items.filter((it,i,a)=>a.findIndex(x=>x.id===it.id)===i);
   if(!items.length){home();return}
-  P={pool:shuffle(items),off:0,label,deck:[],i:0,got:[],again:[],trickyIds:new Set(),mix:label!=="Practise again"};
+  P={pool:shuffle(items),off:0,label,deck:[],i:0,got:[],again:[],trickyIds:new Set(),mix:!/^Practise /.test(label)};
   nextBatch();
 }
 function nextBatch(){
