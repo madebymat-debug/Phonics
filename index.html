@@ -199,6 +199,21 @@ button:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
 .lg-al{animation:lgbob 3.2s ease-in-out infinite}
 @keyframes lgbob{0%,100%{transform:rotate(-10deg) translateY(0)}50%{transform:rotate(-6deg) translateY(-6px)}}
 .logo + .sub{text-align:center;margin-top:10px}
+/* Child mode */
+body.kid .adult-only{display:none!important}
+.kid-only{display:none}
+body.kid .kid-only{display:block}
+.kidm{grid-template-columns:1fr}
+.kidm .mbtn{font-size:1.6rem;padding:22px 10px}
+.gate .disp{font-size:2.2rem;font-weight:700;min-height:3.2rem;line-height:1.3;border:3px solid var(--edge);border-radius:14px;margin:6px 0 14px;background:var(--bg)}
+.keys{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.keys button{font-size:1.45rem;font-weight:700;padding:12px 0;border:3px solid var(--edge);border-radius:12px;background:var(--card);box-shadow:0 3px 0 var(--edge)}
+.keys button:active{transform:translateY(2px);box-shadow:0 1px 0 var(--edge)}
+.keys .ok{background:var(--green);color:#fff}
+.gate.shake{animation:shake .4s ease}
+@keyframes shake{0%,100%{transform:none}20%,60%{transform:translateX(-10px)}40%,80%{transform:translateX(10px)}}
+.kid-badge{display:none}
+body.kid .kid-badge{display:inline-block;margin-top:6px;font-weight:700;color:var(--muted)}
 /* Rewards */
 .slot.tr{border-color:#7D8FB8;background:linear-gradient(160deg,#F4F7FF,#D3DCEF)}
 .slot.tg{border-color:#B98500;background:linear-gradient(160deg,#FFF6C8,#FFCF3F)}
@@ -335,7 +350,7 @@ let S=load(); S.p=S.p||{}; S.levels=S.levels||{}; S.head=!!S.head; S.custom=Arra
 if(S.sfx===undefined) S.sfx=true;
 S.group=S.group||"From school"; S.addType=S.addType||"green";
 S.h=S.h&&typeof S.h==="object"?S.h:{};
-S.stickers=Array.isArray(S.stickers)?S.stickers:[]; S.trophies=S.trophies&&typeof S.trophies==="object"?S.trophies:{};
+S.stickers=Array.isArray(S.stickers)?S.stickers:[]; S.kid=!!S.kid; S.trophies=S.trophies&&typeof S.trophies==="object"?S.trophies:{};
 S.deleted=S.deleted&&typeof S.deleted==="object"?S.deleted:{}; S.resetAt=S.resetAt||0; // [{e:emoji,t:time}] // history: {id:{g:gotCount,a:againCount,t:lastTime}}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 
@@ -647,6 +662,56 @@ let P=null;
 const LGPAL=["#FFD23F","#FF8A00","#FF5FAE","#4ADE80","#5CC8FF","#C4F25E"];
 const PAL=["var(--pink)","var(--orange)","var(--green)","var(--blue)","var(--alien)","var(--red)","var(--teal)"];
 
+// ---------- Child mode: he runs it himself, nothing affects progress ----------
+function applyKid(){document.body.classList.toggle("kid",!!S.kid)}
+function kidStart(k){
+  const lvls=levelsFor(k);
+  let sel=(S.levels[k]||[lvls[0]]).filter(l=>lvls.includes(l)); if(!sel.length) sel=[lvls[0]];
+  start(sel.flatMap(l=>ITEMS[k][l]||[]),ACTS[k].name);
+}
+function kidFinish(){
+  const more=P.off<P.pool.length;
+  app.innerHTML=`
+  <div class="done">
+    <div class="star" aria-hidden="true">⭐</div>
+    <h2>Well done!</h2>
+    <p>You read ${P.deck.length} cards!</p>
+    <div class="stack">
+      ${more?`<button class="go" id="more">${SESSION} more</button>`:""}
+      <button class="ghost" id="home">Home</button>
+    </div>
+  </div>`;
+  SFX.done(); confetti();
+  const mo=$("#more"); if(mo) mo.onclick=nextBatch;
+  $("#home").onclick=home;
+  window.scrollTo(0,0);
+}
+// Grown-up check before leaving child mode
+function gate(onPass){
+  let a,b,ans,val="";
+  const bg=document.createElement("div"); bg.className="pop-bg";
+  const draw=()=>{
+    bg.innerHTML=`<div class="pop gate" role="dialog" aria-modal="true" aria-label="Grown-ups only">
+      <div class="pk">Grown-ups only</div><h2>What is ${a} × ${b}?</h2>
+      <div class="disp" aria-live="polite">${val||"&nbsp;"}</div>
+      <div class="keys">${[1,2,3,4,5,6,7,8,9].map(n=>`<button data-k="${n}">${n}</button>`).join("")}
+        <button data-k="del" aria-label="Delete">⌫</button><button data-k="0">0</button><button data-k="ok" class="ok">OK</button></div>
+      <button class="link" data-k="cancel" style="margin-top:12px">Cancel</button></div>`;
+    bg.querySelectorAll("[data-k]").forEach(x=>x.onclick=()=>{
+      const k=x.dataset.k;
+      if(k==="cancel"){bg.remove();return}
+      if(k==="del") val=val.slice(0,-1);
+      else if(k==="ok"){
+        if(+val===ans){bg.remove();onPass();return}
+        val=""; newQ(); draw(); const p=bg.querySelector(".gate"); p.classList.add("shake"); return;
+      } else if(val.length<3) val+=k;
+      bg.querySelector(".disp").innerHTML=val||"&nbsp;";
+    });
+  };
+  const newQ=()=>{a=3+Math.floor(Math.random()*7); b=3+Math.floor(Math.random()*7); ans=a*b};
+  newQ(); draw(); document.body.appendChild(bg);
+}
+
 function home(){
   P=null; CUR=null; VIEW=home;
   const n=againList().length;
@@ -676,7 +741,7 @@ function home(){
         <span class="sw" style="background:${a.sw};font-size:${a.icon.length>2?"1.15rem":"1.5rem"}">${a.icon}</span>
         <span><h2>${a.name}</h2><p>${a.desc}</p></span>
       </button>`).join("")}
-    ${n?`<button class="act again-row" data-again>
+    ${n?`<button class="act again-row adult-only" data-again>
         <span class="sw" style="background:var(--mark)">${n}</span>
         <span><h2>Practise again</h2><p>Everything marked "again later"</p></span>
       </button>`:""}
@@ -684,16 +749,21 @@ function home(){
       <span class="sw" style="font-size:1.7rem">${S.stickers.length?S.stickers[S.stickers.length-1].e:"⭐"}</span>
       <span><h2>Stickers & trophies</h2><p>${Object.keys(stickerCounts()).filter(e=>STICKER_INFO[e]).length} stickers, ${Object.keys(S.trophies||{}).length} trophies</p></span>
     </button>
-    <button class="act" id="prog">
+    <button class="act adult-only" id="prog">
       <span class="sw" style="background:var(--green)">✓</span>
       <span><h2>Progress</h2><p>What he's got and what's still tricky</p></span>
     </button>
-    <button class="act" id="addw">
+    <button class="act adult-only" id="addw">
       <span class="sw" style="background:var(--ink);color:var(--bg)">+</span>
       <span><h2>Add words</h2><p>${S.custom.length?S.custom.length+" saved from school sheets":"Type in words from school sheets"}</p></span>
     </button>
   </div>
-  <div class="foot">
+  <div class="foot adult-only">
+    <button class="sfx-row" id="kidon">
+      <span class="sfx-ic" aria-hidden="true">🧒</span>
+      <span class="sfx-lb">Child mode<br><small style="font-weight:400;color:var(--muted)">Let him use the app on his own</small></span>
+      <span class="pill" data-s="off">Start</span>
+    </button>
     <button class="sfx-row" id="sfx" role="switch" aria-checked="${S.sfx}">
       <span class="sfx-ic" aria-hidden="true">${S.sfx?"🔊":"🔇"}</span>
       <span class="sfx-lb">Sound effects</span>
@@ -704,14 +774,17 @@ function home(){
       <span class="sfx-lb">Family sync</span>
       <span class="pill" id="syncpill" data-s="${!S.family?"off":SYNC.state}">${pillText()}</span>
     </button>
-  </div>`;
-  app.querySelectorAll("[data-act]").forEach(b=>b.onclick=()=>setup(b.dataset.act));
+  </div>
+  <div class="foot kid-only"><button class="link" id="grown">🔒 Grown-ups</button></div>`;
+  app.querySelectorAll("[data-act]").forEach(b=>b.onclick=()=>S.kid?kidStart(b.dataset.act):setup(b.dataset.act));
   const ag=app.querySelector("[data-again]"); if(ag) ag.onclick=()=>start(againList(),"Practise again");
   $("#addw").onclick=addScreen;
   $("#sfx").onclick=()=>{S.sfx=!S.sfx;save();if(S.sfx)SFX.got();
     const b=$("#sfx");b.setAttribute("aria-checked",S.sfx);b.querySelector(".sfx-ic").textContent=S.sfx?"🔊":"🔇"};
   $("#prog").onclick=progressScreen;
   $("#stk").onclick=stickerBook;
+  $("#kidon").onclick=()=>{S.kid=true;save();applyKid();home()};
+  $("#grown").onclick=()=>gate(()=>{S.kid=false;save();applyKid();home()});
   $("#fam").onclick=familyScreen;
   window.scrollTo(0,0);
 }
@@ -984,13 +1057,13 @@ function card(anim=true){
     <div class="prog"><i style="width:${pct}%"></i></div>
     <div class="stage m-${it.mode} ${tappable?"tap":""} ${P.trickyIds.has(it.id)?"is-tricky":""} ${anim?"slide":""}" id="stage" ${tappable?'role="button" tabindex="0" aria-label="Next sound"':""}>${body}</div>
     ${tappable?`<div class="tools"><button class="toggle" id="head" aria-pressed="${S.head}">Hide sound buttons</button></div>`:""}
-    <div class="marks">
+    ${S.kid?`<div class="marks kidm"><button class="mbtn got" id="next">Next ➜</button></div>`:`<div class="marks">
       <button class="mbtn again" id="again">Again later</button>
       <button class="mbtn got" id="got">Got it</button>
-    </div>`;
-  $("#back").onclick=()=>P.got.length||P.again.length?finish():home();
-  $("#again").onclick=()=>mark("again");
-  $("#got").onclick=()=>mark("got");
+    </div>`}`;
+  $("#back").onclick=()=>!S.kid&&(P.got.length||P.again.length)?finish():home();
+  if(S.kid) $("#next").onclick=()=>{P.i++; if(P.i>=P.deck.length) finish(); else {SFX.step(P.i); card()}};
+  else {$("#again").onclick=()=>mark("again"); $("#got").onclick=()=>mark("got")}
   fit($("#stage").querySelector(".word,.big"),it.mode==="sounds"?240:200);
   if(tappable){
     const f=parse(it.str); let step=-1;
@@ -1039,6 +1112,7 @@ function confetti(){
 }
 function finish(){
   CUR=null;
+  if(S.kid) return kidFinish();
   const more=P.off<P.pool.length, g=P.got.length, a=P.again.length;
   const st=P.i>=P.deck.length&&P.deck.length?awardSticker({n:P.deck.length,got:g}):null;
   const newT=st?checkTrophies():[];
@@ -1192,6 +1266,7 @@ setTimeout(syncNow,600);
 
 // Quietly award trophies already earned before this feature existed
 if(!S.tInit){checkTrophies(); S.tInit=1; save()}
+applyKid();
 home();
 if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))}
 </script>
