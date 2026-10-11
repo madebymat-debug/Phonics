@@ -178,6 +178,25 @@ button:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
 .stage.is-tricky::before{content:"🔁 Tricky one";position:absolute;top:12px;left:14px;font-size:.85rem;font-weight:700;color:var(--muted);
   background:var(--card);border:2px solid var(--edge);border-radius:999px;padding:2px 10px}
 .m-alien.is-tricky::before{color:var(--ink)}
+/* Logo */
+.logo{position:relative;overflow:hidden;border:3px solid var(--edge);border-radius:26px;box-shadow:0 6px 0 var(--edge);margin:8px 0 8px;height:200px;display:grid;place-items:center}
+.lg-bg{position:absolute;inset:0;width:100%;height:100%}
+.lg-txt{position:relative;text-align:center;z-index:2;margin-top:-14px}
+.lg-dy,.lg-ph{font-weight:700;line-height:1;--o:#1B1F3B;
+  text-shadow:3px 0 var(--o),-3px 0 var(--o),0 3px var(--o),0 -3px var(--o),2px 2px var(--o),-2px 2px var(--o),2px -2px var(--o),-2px -2px var(--o),0 6px 0 var(--o)}
+.lg-dy{font-size:2rem;transform:rotate(-5deg);display:inline-block;margin-bottom:2px}
+.lg-ph{font-size:clamp(3rem,15.5vw,4.4rem);letter-spacing:.02em}
+.lg-ph span,.lg-dy span{display:inline-block}
+.lg-ph span:nth-child(odd){transform:translateY(-3px) rotate(-3deg)} .lg-ph span:nth-child(even){transform:translateY(2px) rotate(3deg)}
+.lg-pr{display:inline-block;margin-top:8px;background:#FF3D9A;color:#fff;font-weight:700;font-size:1rem;letter-spacing:.14em;text-transform:uppercase;
+  padding:3px 14px;border:3px solid #1B1F3B;border-radius:10px;box-shadow:0 3px 0 #1B1F3B;transform:rotate(2deg)}
+.lg-c{position:absolute;z-index:1}
+.lg-al{width:74px;left:-8px;bottom:-14px;transform:rotate(-10deg)}
+.lg-ch{width:70px;right:-6px;bottom:-12px;transform:rotate(10deg)}
+.lg-sp{width:52px;right:14px;top:10px;transform:rotate(8deg);animation:bob 2.8s ease-in-out infinite}
+.lg-al{animation:lgbob 3.2s ease-in-out infinite}
+@keyframes lgbob{0%,100%{transform:rotate(-10deg) translateY(0)}50%{transform:rotate(-6deg) translateY(-6px)}}
+.logo + .sub{text-align:center;margin-top:10px}
 /* Rewards */
 .slot.tr{border-color:#7D8FB8;background:linear-gradient(160deg,#F4F7FF,#D3DCEF)}
 .slot.tg{border-color:#B98500;background:linear-gradient(160deg,#FFF6C8,#FFCF3F)}
@@ -583,13 +602,31 @@ function pickTricky(mode,exclude,n){
 
 // ---------- Screens ----------
 let P=null;
+const LGPAL=["#FFD23F","#FF8A00","#FF5FAE","#4ADE80","#5CC8FF","#C4F25E"];
 const PAL=["var(--pink)","var(--orange)","var(--green)","var(--blue)","var(--alien)","var(--red)","var(--teal)"];
 
 function home(){
   P=null; CUR=null; VIEW=home;
   const n=againList().length;
   app.innerHTML=`
-  <h1 class="title">${"Dylan's".split("").map((c,i)=>`<span style="color:${PAL[i%PAL.length]}">${c}</span>`).join("")}<br>Phonics practice</h1>
+  <div class="logo" role="img" aria-label="Dylan's Phonics practice"><svg class="lg-bg" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><radialGradient id="lgg" cx="50%" cy="45%" r="70%"><stop offset="0" stop-color="#8B5CF6"/><stop offset=".65" stop-color="#4C1D95"/><stop offset="1" stop-color="#1E0B4F"/></radialGradient></defs><rect width="400" height="200" fill="url(#lgg)"/><path d="M200 95 L620 95 L616 155Z" fill="#FFD23F" opacity=".17"/><path d="M200 95 L603 213 L582 269Z" fill="#FFD23F" opacity=".17"/><path d="M200 95 L553 322 L517 370Z" fill="#FFD23F" opacity=".17"/><path d="M200 95 L475 412 L427 448Z" fill="#FFD23F" opacity=".17"/><path d="M200 95 L374 477 L318 498Z" fill="#FFD23F" opacity=".17"/><path d="M200 95 L260 511 L200 515Z" fill="#FFD23F" opacity=".17"/><path d="M200 95 L140 511 L82 498Z" fill="#FFD23F" opacity=".17"/><path d="M200 95 L26 477 L-27 448Z" fill="#FFD23F" opacity=".17"/><path d="M200 95 L-75 412 L-117 370Z" fill="#FFD23F" opacity=".17"/><path d="M200 95 L-153 322 L-182 269Z" fill="#FFD23F" opacity=".17"/><path d="M200 95 L-203 213 L-216 155Z" fill="#FFD23F" opacity=".17"/><path d="M200 95 L-220 95 L-216 35Z" fill="#FFD23F" opacity=".17"/><path d="M200 95 L-203 -23 L-182 -79Z" fill="#FFD23F" opacity=".17"/><path d="M200 95 L-153 -132 L-117 -180Z" fill="#FFD23F" opacity=".17"/><path d="M200 95 L-75 -222 L-27 -258Z" fill="#FFD23F" opacity=".17"/><path d="M200 95 L26 -287 L82 -308Z" fill="#FFD23F" opacity=".17"/><path d="M200 95 L140 -321 L200 -325Z" fill="#FFD23F" opacity=".17"/><path d="M200 95 L260 -321 L318 -308Z" fill="#FFD23F" opacity=".17"/><path d="M200 95 L374 -287 L427 -258Z" fill="#FFD23F" opacity=".17"/><path d="M200 95 L475 -222 L517 -180Z" fill="#FFD23F" opacity=".17"/><path d="M200 95 L553 -132 L582 -79Z" fill="#FFD23F" opacity=".17"/><path d="M200 95 L603 -23 L616 35Z" fill="#FFD23F" opacity=".17"/><path d="M40 25 Q40 34 49 34 Q40 34 40 43 Q40 34 31 34 Q40 34 40 25Z" fill="#FFD23F"/><path d="M362 23 Q362 30 369 30 Q362 30 362 37 Q362 30 355 30 Q362 30 362 23Z" fill="#fff"/><path d="M330 87 Q330 92 335 92 Q330 92 330 97 Q330 92 325 92 Q330 92 330 87Z" fill="#FFD23F"/><path d="M70 105 Q70 110 75 110 Q70 110 70 115 Q70 110 65 110 Q70 110 70 105Z" fill="#fff"/><path d="M300 18 Q300 22 304 22 Q300 22 300 26 Q300 22 296 22 Q300 22 300 18Z" fill="#fff"/></svg><svg class="lg-c lg-al" viewBox="0 0 100 100" aria-hidden="true"><line x1="38" y1="22" x2="30" y2="6" stroke="#7FB52A" stroke-width="4" stroke-linecap="round"/><circle cx="30" cy="6" r="5" fill="#FFD23F"/>
+<line x1="62" y1="22" x2="72" y2="8" stroke="#7FB52A" stroke-width="4" stroke-linecap="round"/><circle cx="72" cy="8" r="5" fill="#FFD23F"/>
+<path d="M18 62c0-24 14-42 32-42s32 18 32 42c0 16-12 28-32 28S18 78 18 62z" fill="#C4F25E" stroke="#5E8A1C" stroke-width="3"/>
+<circle cx="50" cy="52" r="15" fill="#fff"/><circle cx="53" cy="54" r="7" fill="#1B1F3B"/><circle cx="56" cy="50" r="2.2" fill="#fff"/>
+<path d="M38 76q12 8 24 0" stroke="#3F6212" stroke-width="4" fill="none" stroke-linecap="round"/></svg><svg class="lg-c lg-sp" viewBox="0 0 100 100" aria-hidden="true"><path d="M50 34 C50 26 50 22 50 16" stroke="#15803D" stroke-width="4" stroke-linecap="round" fill="none"/>
+<path d="M50 19 C40 6 26 8 23 14 C33 23 44 23 50 19Z" fill="#4ADE80" stroke="#15803D" stroke-width="3" stroke-linejoin="round"/>
+<path d="M50 17 C60 3 76 5 79 11 C69 21 57 21 50 17Z" fill="#4ADE80" stroke="#15803D" stroke-width="3" stroke-linejoin="round"/>
+<ellipse cx="50" cy="63" rx="32" ry="29" fill="#22C55E" stroke="#15803D" stroke-width="3"/>
+<circle cx="39" cy="58" r="7.5" fill="#fff"/><circle cx="61" cy="58" r="7.5" fill="#fff"/>
+<circle cx="40" cy="59" r="3.8" fill="#1B1F3B"/><circle cx="62" cy="59" r="3.8" fill="#1B1F3B"/>
+<circle cx="30" cy="70" r="4.5" fill="#FF8FB8" opacity=".85"/><circle cx="70" cy="70" r="4.5" fill="#FF8FB8" opacity=".85"/>
+<path d="M41 73 Q50 81 59 73" stroke="#14532D" stroke-width="3.5" fill="none" stroke-linecap="round"/></svg><svg class="lg-c lg-ch" viewBox="0 0 100 100" aria-hidden="true"><path d="M31 36 L24 14 L43 29Z" fill="#FF8A00" stroke="#9F1239" stroke-width="3" stroke-linejoin="round"/>
+<path d="M69 36 L76 14 L57 29Z" fill="#FF8A00" stroke="#9F1239" stroke-width="3" stroke-linejoin="round"/>
+<path d="M18 63c0-20 14-36 32-36s32 16 32 36c0 18-14 29-32 29S18 81 18 63z" fill="#F43F5E" stroke="#9F1239" stroke-width="3"/>
+<circle cx="39" cy="57" r="8" fill="#fff"/><circle cx="41" cy="58" r="4" fill="#1B1F3B"/>
+<path d="M55 58 Q62 51 69 58" stroke="#1B1F3B" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+<path d="M37 70 Q50 84 63 70 Z" fill="#7F1D1D" stroke="#7F1D1D" stroke-width="2" stroke-linejoin="round"/>
+<ellipse cx="52" cy="76" rx="5" ry="3.2" fill="#FF8FB8"/></svg><div class="lg-txt"><div class="lg-dy">${"Dylan's".split("").map((c,i)=>`<span style="color:${LGPAL[i%LGPAL.length]}">${c}</span>`).join("")}</div><div class="lg-ph">${"PHONICS".split("").map((c,i)=>`<span style="color:${LGPAL[(i+2)%LGPAL.length]}">${c}</span>`).join("")}</div><div class="lg-pr">practice</div></div></div>
   <p class="sub">Read Write Inc. practice for home</p>
   <div class="acts">
     ${Object.entries(ACTS).map(([k,a])=>`
