@@ -110,6 +110,8 @@ button:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
 .stage.slide{animation:slide .28s ease-out}
 @keyframes slide{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:none}}
 .big{display:inline-block;line-height:1;color:var(--blue-ink);font-size:100px}
+.big.split{position:relative;padding-top:.12em}
+.big.split::before{content:"";position:absolute;left:.24em;right:.24em;top:0;height:.24em;border:.055em solid currentColor;border-bottom:none;border-radius:50% 50% 0 0/100% 100% 0 0}
 .ex{margin-top:14px;color:var(--muted);font-size:1.1rem}
 .word{position:relative;display:inline-flex;justify-content:center;font-size:100px;line-height:1}
 .gp{display:inline-flex;flex-direction:column;align-items:center;padding:0 .02em;border-radius:.14em;transition:background .15s}
@@ -1045,7 +1047,7 @@ function card(anim=true){
   const pct=(P.i/P.deck.length)*100;
   let body="",tappable=false;
   if(it.mode==="sounds"){
-    body=`<div class="big">${esc(it.g)}</div><div class="ex">as in ${esc(it.hint)}</div>`;
+    body=`<div class="big${/^[a-z]-e$/.test(it.g)?" split":""}">${esc(it.g)}</div><div class="ex">as in ${esc(it.hint)}</div>`;
   } else if(it.mode==="red"){
     body=`${CHAR.red}<div class="word red"><span class="gp"><span class="l">${esc(it.w)}</span></span></div>`;
   } else {
