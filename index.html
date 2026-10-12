@@ -218,6 +218,17 @@ body.kid .kid-only{display:block}
 .kid-badge{display:none}
 body.kid .kid-badge{display:inline-block;margin-top:6px;font-weight:700;color:var(--muted)}
 /* Rewards */
+.slot.shiny{border-color:#FF3D9A;background:linear-gradient(135deg,#FFE3F1,#E3F0FF 50%,#FFF6C8);box-shadow:0 3px 0 var(--edge),0 0 0 3px #FFD23F inset}
+.slot.shiny::after{content:"✨";position:absolute;left:-8px;top:-10px;font-size:1.1rem;animation:twinkle 1.6s ease-in-out infinite}
+@keyframes twinkle{0%,100%{transform:scale(.8);opacity:.6}50%{transform:scale(1.15) rotate(15deg);opacity:1}}
+.slot.empty.locked{opacity:.45;font-size:1.2rem}
+.season{margin:-4px 0 10px;font-weight:700;color:var(--muted);font-size:.95rem}
+.season.now{color:var(--orange)}
+.pop.shiny{background:linear-gradient(135deg,#FFE3F1,#E3F0FF 50%,#FFF6C8)}
+.pop.shiny h2,.pop.shiny p{color:#2A2A3A}
+.pop.season-pop{background:linear-gradient(160deg,#FFE7C2,#FFB347)}
+.pop.season-pop h2,.pop.season-pop p{color:#2A1A00}
+
 .slot.tr{border-color:#7D8FB8;background:linear-gradient(160deg,#F4F7FF,#D3DCEF)}
 .slot.tg{border-color:#B98500;background:linear-gradient(160deg,#FFF6C8,#FFCF3F)}
 .slot.empty.tr{background:transparent;border-color:#7D8FB8;color:#7D8FB8}
@@ -528,6 +539,41 @@ const CHEEKY_SVG=`<svg class="alien-pic" viewBox="0 0 100 100" aria-hidden="true
 <ellipse cx="52" cy="76" rx="5" ry="3.2" fill="#FF8FB8"/></svg>`;
 const CHAR={green:SPROUT_SVG,red:CHEEKY_SVG,alien:ALIEN_SVG};
 
+
+// ---------- Rewards: themed sticker pages with rarity, plus trophies ----------
+const STICKER_PAGES=[
+  {id:"pets",name:"Pets & Farm",icon:"🐾",c:["🐶","🐱","🐭","🐹","🐰","🐮","🐷","🐔","🐣","🐥","🦆","🐴","🐑","🐐","🐓","🐇"],r:["🦙","🦔","🦢"],g:["🦚"]},
+  {id:"wild",name:"Wild Animals",icon:"🦁",c:["🦁","🐯","🐼","🐨","🐸","🦊","🐻","🐒","🦒","🦓","🐘","🦛","🦏","🐪","🦘","🐊","🐍","🦎","🦥","🦦"],r:["🦧","🐆","🦬"],g:["🦣"]},
+  {id:"ocean",name:"Ocean",icon:"🌊",c:["🐳","🐋","🐬","🐟","🐠","🐡","🦈","🐙","🦑","🦀","🦞","🦐","🐚","🐢"],r:["🦭","🪸","🏝️"],g:["🪼"]},
+  {id:"bugs",name:"Bugs & Birds",icon:"🦋",c:["🦋","🐝","🐞","🐛","🐜","🦗","🐌","🐦","🐤","🦉","🐧","🦜","🦅","🦇","🕊️"],r:["🦩","🪲","🕷️"],g:["🦤"]},
+  {id:"magic",name:"Dinos & Magic",icon:"🦖",c:["🦖","🦕","🥚","🌋","🦴","🍄","🔮","🪄","🏰","🗝️"],r:["🐲","👻","👽"],g:["🦄","🐉"]},
+  {id:"space",name:"Space",icon:"🚀",c:["🚀","🛸","🌙","⭐","🪐","☄️","🌍","🌞","🌟","🔭","🌛","🌕"],r:["🛰️","🌠","👾"],g:["🌌"]},
+  {id:"nature",name:"Weather & Nature",icon:"🌈",c:["🌈","☀️","⛅","🌧️","⛈️","❄️","☃️","⛄","🌪️","🌊","🌸","🌻","🌷","🌵","🌴","🍁","🍂","🌲","🌳"],r:["⚡","🌺","🪷"],g:["🍀"]},
+  {id:"vehicles",name:"Vehicles",icon:"🚒",c:["🚗","🚕","🚙","🚌","🏎️","🚓","🚑","🚒","🚐","🛻","🚚","🚜","🛵","🏍️","🚲","🛴","🚂","🚆","🚁","✈️","🚤","⛵","🚢"],r:["🛩️","🚠","🛶"],g:["🚅"]},
+  {id:"food",name:"Food",icon:"🍕",c:["🍕","🍦","🧁","🍓","🍉","🍎","🍌","🍇","🍒","🍑","🍍","🥝","🥕","🌽","🥦","🍔","🌭","🍟","🥞","🧇","🍪","🍩","🍫","🍭","🍬","🥨","🧀","🍿"],r:["🍰","🍯","🍨"],g:["🎂"]},
+  {id:"play",name:"Sport & Play",icon:"⚽",c:["⚽","🏀","🏈","⚾","🎾","🏐","🏉","🏓","🏸","⛳","🛹","🛼","🎈","🪁","🎨","🎸","🥁","🎹","🧸","🪀","🎲","🧩","🎯"],r:["🏅","🎪","🎠"],g:["🏆"]},
+  {id:"treasure",name:"Treasure",icon:"💎",c:["🗺️","🧭","⚓","🔑","🎁","🏺","🪙","💰"],r:["💎","🧰","🔦"],g:["👑"]}
+];
+// Seasonal pages: only collectable during their window (month, day). They come back every year.
+const SEASON_PAGES=[
+  {id:"halloween",name:"Halloween",icon:"🎃",from:[10,1],to:[11,2],c:["🎃","🕸️","🧹","🕯️","🏚️","🌚","🍏","🧪","🍡","🥧"],r:["🧙","🧛","🐈‍⬛"],g:["🧞"]},
+  {id:"christmas",name:"Christmas",icon:"🎄",from:[12,1],to:[1,5],c:["🎄","🦌","🛷","🔔","🥛","🧦","🎀","🧣","🧤","🎶"],r:["🤶","🎊","⛸️"],g:["🎅"]},
+  {id:"easter",name:"Easter",icon:"🌼",from:[3,15],to:[4,30],c:["🌼","🪺","🧺","🌱","🌿","🪻","🌾","🥬"],r:["🪹","🌹","🌝"],g:["🏵️"]},
+  {id:"summer",name:"Summer",icon:"🏖️",from:[7,15],to:[9,5],c:["🏖️","🩴","🕶️","🪣","⛱️","🧃","🍧","🥥","🍋","🏕️"],r:["🏄","🤿","🛟"],g:["🌅"]}
+];
+SEASON_PAGES.forEach(pg=>pg.season=true);
+const ALL_PAGES=[...STICKER_PAGES,...SEASON_PAGES];
+const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
+function inSeason(pg,d){
+  d=d||new Date(); const v=(d.getMonth()+1)*100+d.getDate(), a=pg.from[0]*100+pg.from[1], b=pg.to[0]*100+pg.to[1];
+  return a<=b?(v>=a&&v<=b):(v>=a||v<=b);
+}
+function activeSeason(){return SEASON_PAGES.find(pg=>inSeason(pg))||null}
+function seasonEnd(pg){return pg.to[1]+" "+MONTHS[pg.to[0]-1]}
+// Every sticker has one home; the main draw only uses the year-round pages
+const STICKER_INFO={}, TIER={c:[],r:[],g:[]};
+ALL_PAGES.forEach(pg=>["c","r","g"].forEach(t=>{pg[t]=pg[t].filter(e=>!STICKER_INFO[e]);pg[t].forEach(e=>{STICKER_INFO[e]={page:pg,tier:t};if(!pg.season)TIER[t].push(e)})}));
+const STICKERS=ALL_PAGES.flatMap(pg=>[...pg.c,...pg.r,...pg.g]);
 // ---------- Sticker tap sounds: one style per sticker page ----------
 function sweep(f0,f1,at,dur,type,vol){
   const c=ac(); if(!c) return;
@@ -547,61 +593,82 @@ function noise(at,dur,vol,ftype,f0,f1){
 }
 const rnd=(a,b)=>a+Math.random()*(b-a);
 const PENTA=[1047,1175,1319,1568,1760,2093,2349];
+// Each sticker gets its own sound: the page sets the style, the sticker itself picks the
+// variant and pitch, and a little randomness keeps repeat taps from sounding identical.
 const STICKER_SOUNDS={
-  pets:()=>{const k=rnd(.85,1.2);sweep(900*k,1700*k,0,.08,"sine",.16);sweep(1700*k,1100*k,.08,.1,"sine",.14)},           // squeak
-  wild:()=>{const k=rnd(.85,1.15);sweep(170*k,620*k,0,.14,"triangle",.2);sweep(620*k,260*k,.14,.22,"triangle",.16)},      // boing
-  ocean:()=>{for(let i=0;i<4;i++)sweep(rnd(350,600),rnd(1100,1700),i*.07+rnd(0,.03),.07,"sine",.13)},                      // bubbles
-  bugs:()=>{const k=rnd(.9,1.15);sweep(2100*k,3300*k,0,.07,"sine",.11);sweep(2500*k,3700*k,.1,.07,"sine",.1);sweep(2300*k,3500*k,.19,.06,"sine",.08)}, // tweet tweet
-  magic:()=>{[0,1,2,3,4,5].forEach(i=>tone(PENTA[i]*rnd(.98,1.02),i*.05,.35,"triangle",.07));sweep(2000,4000,.05,.4,"sine",.03)},   // sparkle
-  space:()=>{sweep(rnd(1600,2200),160,0,.3,"square",.05);sweep(rnd(1500,1900),140,.06,.28,"sawtooth",.03)},              // laser
-  nature:()=>{for(let i=0;i<3;i++)tone(PENTA[Math.floor(Math.random()*PENTA.length)],i*.12+rnd(0,.04),.9,"sine",.08)},    // wind chimes
-  vehicles:()=>{const f=rnd(380,480);tone(f,0,.11,"square",.05);tone(f*1.26,0,.11,"square",.03);tone(f,.16,.14,"square",.05);tone(f*1.26,.16,.14,"square",.03)}, // beep beep
-  food:()=>{noise(0,.07,.28,"bandpass",900);noise(.12,.07,.28,"bandpass",700);sweep(320,240,.24,.18,"sine",.12)},          // nom nom
-  play:()=>{sweep(700,160,0,.12,"sine",.2);sweep(560,150,.16,.1,"sine",.15);sweep(430,140,.29,.08,"sine",.1)},            // bouncing ball
-  treasure:()=>{tone(988,0,.08,"square",.06);tone(1319,.08,.35,"square",.06)}                                               // coin
+  pets:[k=>{sweep(900*k,1700*k,0,.08,"sine",.16);sweep(1700*k,1100*k,.08,.1,"sine",.14)},
+        k=>{for(let i=0;i<2;i++){sweep(1000*k,1800*k,i*.16,.07,"sine",.15);sweep(1800*k,1200*k,i*.16+.07,.08,"sine",.13)}}],
+  wild:[k=>{sweep(170*k,620*k,0,.14,"triangle",.2);sweep(620*k,260*k,.14,.22,"triangle",.16)},
+        k=>{sweep(140*k,90*k,0,.45,"sawtooth",.07);noise(0,.45,.12,"lowpass",500*k,200)}],
+  ocean:[k=>{for(let i=0;i<4;i++)sweep(rnd(350,600)*k,rnd(1100,1700)*k,i*.07+rnd(0,.03),.07,"sine",.13)},
+         k=>{noise(0,.45,.22,"bandpass",2500*k,400);sweep(300*k,900*k,.05,.12,"sine",.08)}],
+  bugs:[k=>{sweep(2100*k,3300*k,0,.07,"sine",.11);sweep(2500*k,3700*k,.1,.07,"sine",.1);sweep(2300*k,3500*k,.19,.06,"sine",.08)},
+        k=>{for(let i=0;i<8;i++)tone((i%2?230:250)*k,i*.045,.06,"sawtooth",.04)}],
+  magic:[k=>{[0,1,2,3,4,5].forEach(i=>tone(PENTA[i]*k,i*.05,.35,"triangle",.07));sweep(2000,4000,.05,.4,"sine",.03)},
+         k=>{[5,4,3,2,1,0].forEach(i=>tone(PENTA[i]*k,i*.06,.4,"sine",.07))}],
+  space:[k=>{sweep(2000*k,160,0,.3,"square",.05);sweep(1700*k,140,.06,.28,"sawtooth",.03)},
+         k=>{noise(0,.5,.16,"bandpass",300,3000*k);sweep(200*k,1200*k,0,.5,"sine",.06)}],
+  nature:[k=>{for(let i=0;i<3;i++)tone(PENTA[Math.floor(Math.random()*PENTA.length)]*k,i*.12+rnd(0,.04),.9,"sine",.08)},
+          k=>{for(let i=0;i<5;i++)sweep(rnd(1500,2500)*k,rnd(600,900)*k,i*.09+rnd(0,.03),.06,"sine",.09)}],
+  vehicles:[k=>{const f=420*k;[0,.16].forEach(t=>{tone(f,t,.12,"square",.05);tone(f*1.26,t,.12,"square",.03)})},
+            k=>{sweep(70*k,260*k,0,.55,"sawtooth",.07);sweep(140*k,520*k,0,.55,"square",.025)}],
+  food:[k=>{noise(0,.07,.28,"bandpass",900*k);noise(.12,.07,.28,"bandpass",700*k);sweep(320*k,240*k,.24,.18,"sine",.12)},
+        k=>{sweep(250*k,1100*k,0,.3,"sine",.11);noise(0,.3,.08,"bandpass",1500*k,3000)}],
+  play:[k=>{sweep(700*k,160,0,.12,"sine",.2);sweep(560*k,150,.16,.1,"sine",.15);sweep(430*k,140,.29,.08,"sine",.1)},
+        k=>{for(let i=0;i<6;i++)tone((i%2?2100:1900)*k,i*.05,.06,"sine",.07)}],
+  halloween:[k=>{const c=ac();if(!c)return;sweep(500*k,900*k,0,.25,"sine",.1);sweep(900*k,350*k,.25,.45,"sine",.1);for(let i=0;i<6;i++)tone((i%2?620:660)*k,.05+i*.08,.08,"sine",.03)},
+             k=>{for(let i=0;i<5;i++)sweep(900*k,700*k,i*.09,.07,"square",.035)}],
+  christmas:[k=>{for(let i=0;i<6;i++){noise(i*.08,.07,.12,"highpass",6000);tone((i%2?2637:3136)*k,i*.08,.12,"sine",.04)}},
+             k=>{[1319,1319,1319,1319,1319,1568,1047,1175,1319].forEach((f,i)=>tone(f*k,[0,.15,.3,.5,.65,.8,.95,1.05,1.2][i],.14,"triangle",.07))}],
+  easter:[k=>{sweep(300*k,900*k,0,.1,"sine",.15);sweep(400*k,1100*k,.18,.1,"sine",.13)},
+          k=>{for(let i=0;i<3;i++)tone(PENTA[i*2]*k,i*.1,.4,"triangle",.07)}],
+  summer:[k=>{noise(0,.7,.14,"lowpass",900,300);noise(.35,.6,.1,"lowpass",800,250)},
+          k=>{[784,988,1175,988,784].forEach((f,i)=>tone(f*k,i*.12,.18,"square",.04))}],
+  treasure:[k=>{tone(988*k,0,.08,"square",.06);tone(1319*k,.08,.35,"square",.06)},
+            k=>{[1568,2093,2637,3136].forEach((f,i)=>tone(f*k,i*.05,.3,"triangle",.06))}]
 };
+const nk=e=>String(e).replace(/\uFE0F/g,"");
+const STICKER_KEY={}; for(const e in STICKER_INFO) STICKER_KEY[nk(e)]=STICKER_INFO[e];
 function stickerSound(e){
   if(!S.sfx) return;
-  const info=STICKER_INFO[e]; if(!info) return SFX.step(Math.floor(Math.random()*7));
-  (STICKER_SOUNDS[info.page.id]||SFX.added)();
-  if(info.tier!=="c") [2093,2637,3136,4186].forEach((f,i)=>tone(f,.15+i*.06,.25,"sine",info.tier==="g"?.07:.045)); // extra sparkle for rare
+  const info=STICKER_KEY[nk(e)];
+  if(!info) return STICKER_SOUNDS.magic[0](rnd(.9,1.1));
+  let h=0; for(const ch of nk(e)) h=(h*31+ch.codePointAt(0))>>>0;
+  const vars=STICKER_SOUNDS[info.page.id]||STICKER_SOUNDS.magic;
+  const k=(0.8+(h%11)*0.045)*rnd(.95,1.05);      // each sticker has its own pitch
+  vars[h%vars.length](k);                        // and its own variant
+  if(info.tier!=="c") [2093,2637,3136,4186].forEach((f,i)=>tone(f,.15+i*.06,.25,"sine",info.tier==="g"?.07:.045));
   if(info.tier==="g") [1047,1319,1568].forEach(f=>tone(f,.4,.7,"triangle",.05));
 }
 
-// ---------- Rewards: themed sticker pages with rarity, plus trophies ----------
-const STICKER_PAGES=[
-  {id:"pets",name:"Pets & Farm",icon:"🐾",c:["🐶","🐱","🐭","🐹","🐰","🐮","🐷","🐔","🐣","🐥","🦆","🐴","🐑","🐐","🐓","🐇"],r:["🦙","🦔","🦢"],g:["🦚"]},
-  {id:"wild",name:"Wild Animals",icon:"🦁",c:["🦁","🐯","🐼","🐨","🐸","🦊","🐻","🐒","🦒","🦓","🐘","🦛","🦏","🐪","🦘","🐊","🐍","🦎","🦥","🦦"],r:["🦧","🐆","🦬"],g:["🦣"]},
-  {id:"ocean",name:"Ocean",icon:"🌊",c:["🐳","🐋","🐬","🐟","🐠","🐡","🦈","🐙","🦑","🦀","🦞","🦐","🐚","🐢"],r:["🦭","🪸","🏝️"],g:["🪼"]},
-  {id:"bugs",name:"Bugs & Birds",icon:"🦋",c:["🦋","🐝","🐞","🐛","🐜","🦗","🐌","🐦","🐤","🦉","🐧","🦜","🦅","🦇","🕊️"],r:["🦩","🪲","🕷️"],g:["🦤"]},
-  {id:"magic",name:"Dinos & Magic",icon:"🦖",c:["🦖","🦕","🥚","🌋","🦴","🍄","🔮","🪄","🏰","🗝️"],r:["🐲","👻","👽"],g:["🦄","🐉"]},
-  {id:"space",name:"Space",icon:"🚀",c:["🚀","🛸","🌙","⭐","🪐","☄️","🌍","🌞","🌟","🔭","🌛","🌕"],r:["🛰️","🌠","👾"],g:["🌌"]},
-  {id:"nature",name:"Weather & Nature",icon:"🌈",c:["🌈","☀️","⛅","🌧️","⛈️","❄️","☃️","⛄","🌪️","🌊","🌸","🌻","🌷","🌵","🌴","🍁","🍂","🌲","🌳"],r:["⚡","🌺","🪷"],g:["🍀"]},
-  {id:"vehicles",name:"Vehicles",icon:"🚒",c:["🚗","🚕","🚙","🚌","🏎️","🚓","🚑","🚒","🚐","🛻","🚚","🚜","🛵","🏍️","🚲","🛴","🚂","🚆","🚁","✈️","🚤","⛵","🚢"],r:["🛩️","🚠","🛶"],g:["🚅"]},
-  {id:"food",name:"Food",icon:"🍕",c:["🍕","🍦","🧁","🍓","🍉","🍎","🍌","🍇","🍒","🍑","🍍","🥝","🥕","🌽","🥦","🍔","🌭","🍟","🥞","🧇","🍪","🍩","🍫","🍭","🍬","🥨","🧀","🍿"],r:["🍰","🍯","🍨"],g:["🎂"]},
-  {id:"play",name:"Sport & Play",icon:"⚽",c:["⚽","🏀","🏈","⚾","🎾","🏐","🏉","🏓","🏸","⛳","🛹","🛼","🎈","🪁","🎨","🎸","🥁","🎹","🧸","🪀","🎲","🧩","🎯"],r:["🏅","🎪","🎠"],g:["🏆"]},
-  {id:"treasure",name:"Treasure",icon:"💎",c:["🗺️","🧭","⚓","🔑","🎁","🏺","🪙","💰"],r:["💎","🧰","🔦"],g:["👑"]}
-];
-// "🌊" appears on two pages; keep the first so every sticker has one home
-const STICKER_INFO={}, TIER={c:[],r:[],g:[]};
-STICKER_PAGES.forEach(pg=>["c","r","g"].forEach(t=>{pg[t]=pg[t].filter(e=>!STICKER_INFO[e]);pg[t].forEach(e=>{STICKER_INFO[e]={page:pg,tier:t};TIER[t].push(e)})}));
-const STICKERS=[...TIER.c,...TIER.r,...TIER.g];
 const RARITY={g:0.03,r:0.15}; // 3% super rare, 15% rare, the rest common
 function stickerCounts(){const c={};S.stickers.forEach(x=>c[x.e]=(c[x.e]||0)+1);return c}
 function awardSticker(meta){
   const c=stickerCounts(), roll=Math.random();
-  const tier=roll<RARITY.g?"g":roll<RARITY.g+RARITY.r?"r":"c";
-  const pool=TIER[tier], fresh=pool.filter(e=>!c[e]), from=fresh.length?fresh:pool;
-  const e=from[Math.floor(Math.random()*from.length)];
+  let tier=roll<RARITY.g?"g":roll<RARITY.g+RARITY.r?"r":"c", e=null;
+  const sp=activeSeason();
+  if(sp&&Math.random()<0.5){
+    // half of in-season sessions try for a seasonal sticker the child doesn't have yet
+    const fresh=t=>sp[t].filter(x=>!c[x]);
+    const want=fresh(tier), any=[...fresh("c"),...fresh("r"),...fresh("g")];
+    const from=want.length?want:any;
+    if(from.length){e=from[Math.floor(Math.random()*from.length)]; tier=STICKER_INFO[e].tier}
+  }
+  if(!e){
+    const pool=TIER[tier], fresh=pool.filter(x=>!c[x]), notShiny=pool.filter(x=>(c[x]||0)<3);
+    const from=fresh.length?fresh:notShiny.length?notShiny:pool;   // new first, then work towards shinies
+    e=from[Math.floor(Math.random()*from.length)];
+  }
   S.stickers.push({e,t:Date.now(),...(meta||{})}); save();
-  return {e,isNew:!c[e],tier,page:STICKER_INFO[e].page};
+  const n=(c[e]||0)+1;
+  return {e,isNew:n===1,shinyNow:n===3,tier,page:STICKER_INFO[e].page};
 }
 function allGot(items){return !!(items&&items.length)&&items.every(it=>S.p[it.id]==="got")}
 function tstats(){
   const st=S.stickers;
   let words=0; for(const id in S.h){const it=ALL[id]; if(it&&it.str) words+=S.h[id].g||0}
   return {sessions:st.length, days:new Set(st.map(x=>new Date(x.t).toDateString())).size,
-    perfect:st.filter(x=>x.n>=8&&x.got===x.n).length, words, comebacks:S.comebacks||0};
+    perfect:st.filter(x=>x.n>=8&&x.got===x.n).length, shinies:Object.values(stickerCounts()).filter(v=>v>=3).length, words, comebacks:S.comebacks||0};
 }
 function trophyDefs(){
   const T=[
@@ -626,7 +693,9 @@ function trophyDefs(){
   ];
   for(const lv in SCHOOL.green) T.push({id:"pack_"+lv,icon:"🎒",name:LEVEL_NAMES[lv]+" pack",desc:"Got every "+LEVEL_NAMES[lv]+" green word",check:()=>allGot(ITEMS.green[lv])});
   const c=stickerCounts();
-  STICKER_PAGES.forEach(pg=>T.push({id:"page_"+pg.id,icon:pg.icon,name:pg.name+" page",desc:"Collected every sticker on the "+pg.name+" page",
+  T.push({id:"shiny1",icon:"💫",name:"First shiny!",desc:"Collected 3 of the same sticker",check:t=>t.shinies>=1},
+    {id:"shiny10",icon:"🪩",name:"10 shinies",desc:"Made 10 stickers shiny",check:t=>t.shinies>=10,special:1});
+  ALL_PAGES.forEach(pg=>T.push({id:"page_"+pg.id,icon:pg.icon,name:pg.name+" page",desc:"Collected every sticker on the "+pg.name+" page",
     check:()=>[...pg.c,...pg.r,...pg.g].every(e=>c[e]),special:1}));
   return T;
 }
@@ -893,17 +962,24 @@ function stickerBook(){
   VIEW=stickerBook; CUR=null;
   const c=stickerCounts(), n=Object.keys(c).filter(e=>STICKER_INFO[e]).length;
   const defs=trophyDefs(), tr=S.trophies||{}, nt=defs.filter(d=>tr[d.id]).length;
-  const slot=(e,t)=>c[e]
-    ?`<button class="slot t${t}" data-e="${e}" aria-label="sticker">${e}${c[e]>1?`<span class="n">×${c[e]}</span>`:""}</button>`
-    :`<div class="slot empty t${t}" aria-hidden="true">?</div>`;
+  const sp=activeSeason();
+  const slot=(e,t,lock)=>c[e]
+    ?`<button class="slot t${t}${c[e]>=3?" shiny":""}" data-e="${e}" aria-label="sticker">${e}${c[e]>1?`<span class="n">×${c[e]}</span>`:""}</button>`
+    :`<div class="slot empty t${t}${lock?" locked":""}" aria-hidden="true">${lock?"🔒":"?"}</div>`;
+  const page=pg=>{
+    const all=[...pg.c,...pg.r,...pg.g], have=all.filter(e=>c[e]).length, lock=pg.season&&pg!==sp;
+    const note=pg.season?(pg===sp?`<p class="season now">Only until ${seasonEnd(pg)}! Back again next year.</p>`
+      :`<p class="season">Comes back in ${MONTHS[pg.from[0]-1]}</p>`):"";
+    return `<h3 class="pghead"><span>${pg.icon} ${esc(pg.name)}</span><span>${have===all.length?"✅ ":""}${have}/${all.length}</span></h3>${note}
+      <div class="sgrid">${pg.c.map(e=>slot(e,"c",lock)).join("")}${pg.r.map(e=>slot(e,"r",lock)).join("")}${pg.g.map(e=>slot(e,"g",lock)).join("")}</div>`;
+  };
+  const shinies=Object.values(c).filter(v=>v>=3).length;
   const stickersHTML=`
-    <p class="sub">${n} of ${STICKERS.length} collected. Finish a game to win a sticker!</p>
-    <div class="key"><span><b class="kb tr"></b>Rare</span><span><b class="kb tg"></b>Super rare</span></div>
-    ${STICKER_PAGES.map(pg=>{
-      const all=[...pg.c,...pg.r,...pg.g], have=all.filter(e=>c[e]).length;
-      return `<h3 class="pghead"><span>${pg.icon} ${esc(pg.name)}</span><span>${have===all.length?"✅ ":""}${have}/${all.length}</span></h3>
-        <div class="sgrid">${pg.c.map(e=>slot(e,"c")).join("")}${pg.r.map(e=>slot(e,"r")).join("")}${pg.g.map(e=>slot(e,"g")).join("")}</div>`;
-    }).join("")}`;
+    <p class="sub">${n} of ${STICKERS.length} collected${shinies?`, ${shinies} shiny`:""}. Finish a game to win a sticker!</p>
+    <div class="key"><span><b class="kb tr"></b>Rare</span><span><b class="kb tg"></b>Super rare</span><span>✨ 3 of the same = shiny</span></div>
+    ${sp?page(sp):""}
+    ${STICKER_PAGES.map(page).join("")}
+    ${SEASON_PAGES.filter(pg=>pg!==sp).map(page).join("")}`;
   const trophiesHTML=`
     <p class="sub">${nt} of ${defs.length} earned. Grey ones are still to win!</p>
     <div class="tgrid">${defs.map(d=>{const got=tr[d.id];
@@ -919,7 +995,7 @@ function stickerBook(){
   ${SB_TAB==="stickers"?stickersHTML:trophiesHTML}`;
   $("#back").onclick=home;
   app.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{SB_TAB=b.dataset.tab;stickerBook()});
-  app.querySelectorAll("button.slot").forEach((b,i)=>b.onclick=()=>{
+  app.querySelectorAll("button.slot").forEach(b=>b.onclick=()=>{
     b.classList.remove("wig"); void b.offsetWidth; b.classList.add("wig"); stickerSound(b.dataset.e);
   });
 }
@@ -1136,7 +1212,9 @@ function finish(){
   const bk=$("#book"); if(bk) bk.onclick=stickerBook;
   const big=app.querySelector(".done .sticker"); if(big&&st){big.style.cursor="pointer";big.onclick=()=>{big.classList.remove("wig");void big.offsetWidth;big.classList.add("wig");stickerSound(st.e)}}
   const pops=[];
-  if(st&&st.tier!=="c") pops.push({icon:st.e,cls:st.tier==="g"?"gold":"silver",kicker:st.tier==="g"?"Super rare sticker!":"Rare sticker!",
+  if(st&&st.shinyNow) pops.push({icon:st.e,cls:"shiny",kicker:"Shiny sticker!",title:"It sparkles!",text:"That's 3 of the same sticker, so it has turned shiny!"});
+  if(st&&st.isNew&&st.page.season) pops.push({icon:st.e,cls:"season-pop",kicker:st.page.name+" sticker!",title:"A special one!",text:st.page.name+" stickers can only be found until "+seasonEnd(st.page)+"."});
+  if(st&&st.tier!=="c"&&!st.page.season) pops.push({icon:st.e,cls:st.tier==="g"?"gold":"silver",kicker:st.tier==="g"?"Super rare sticker!":"Rare sticker!",
     title:st.isNew?"A new one!":"Another one!",text:(st.tier==="g"?"Super rare stickers hardly ever turn up. ":"Rare stickers don't come along very often. ")+"This one goes on the "+st.page.name+" page."});
   newT.forEach(d=>pops.push({icon:d.icon,cls:d.special?"gold":"",kicker:"New trophy!",title:d.name,text:d.desc+"!"}));
   if(pops.length) setTimeout(()=>celebrate(pops),900);
