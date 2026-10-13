@@ -161,7 +161,7 @@ button:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
 .pill{flex:none;font-size:.95rem;font-weight:700;padding:4px 12px;border-radius:999px;border:2px solid var(--edge);background:var(--soft)}
 .pill[data-s="ok"],.pill[data-s="idle"]{background:var(--green);color:#fff}
 .pill[data-s="error"]{background:var(--orange);color:#fff}
-.codebox{margin-top:22px;text-align:center;font-size:clamp(1.8rem,9vw,2.6rem);font-weight:700;letter-spacing:.06em;
+.codebox{margin-top:22px;text-align:center;white-space:nowrap;font-size:clamp(1.4rem,7.4vw,2.4rem);font-weight:700;letter-spacing:.06em;
   background:var(--card);border:3px solid var(--edge);border-radius:20px;box-shadow:0 5px 0 var(--edge);padding:18px 10px;user-select:all}
 /* Insights */
 .ins{display:flex;align-items:center;gap:12px;background:var(--card);border:3px solid var(--edge);border-radius:16px;padding:12px 14px;margin:10px 0;box-shadow:0 3px 0 var(--edge)}
@@ -1301,7 +1301,26 @@ let PENDING_JOIN=null;
   if(j){PENDING_JOIN=normCode(j); history.replaceState(null,"",location.pathname)}}catch(e){}})();
 function familyScreen(){
   VIEW=familyScreen; CUR=null;
-  if(!S.family){
+  if(!S.family&&PENDING_JOIN){
+    // Opened from a shared link: one simple choice, nothing else to get wrong
+    app.innerHTML=`
+    <div class="bar"><button class="back" id="back">‹ Home</button></div>
+    <h1 class="title">Join the family</h1>
+    <p class="hint">You've been invited to share Dylan's stickers, words and progress on this device.</p>
+    <div class="codebox">${fmtCode(PENDING_JOIN)}</div>
+    <button class="go" id="join1" style="margin-top:22px">Join</button>
+    <div class="warn" id="fmsg" aria-live="polite"></div>`;
+    $("#back").onclick=()=>{PENDING_JOIN=null;home()};
+    $("#join1").onclick=async()=>{
+      const c=PENDING_JOIN, msg=$("#fmsg"); $("#join1").disabled=true;
+      msg.style.color="var(--muted)"; msg.textContent="Joining…";
+      try{
+        const r=await rpc("get_family",{p_code:c});
+        if(!r){msg.style.color="";msg.textContent="That link doesn't seem to work. Ask for a new one.";$("#join1").disabled=false;return}
+        S.family=c; PENDING_JOIN=null; save(); await syncNow(); familyScreen();
+      }catch(e){msg.style.color="";msg.textContent="Couldn't connect ("+String(e&&e.message||e)+"). Check the internet connection and try again.";$("#join1").disabled=false}
+    };
+  } else if(!S.family){
     app.innerHTML=`
     <div class="bar"><button class="back" id="back">‹ Home</button></div>
     <h1 class="title">Family sync</h1>
@@ -1309,8 +1328,7 @@ function familyScreen(){
     <h3 class="ghead">First phone</h3>
     <button class="go" id="create">Start family sync</button>
     <h3 class="ghead">Already started on another phone?</h3>
-    ${PENDING_JOIN?`<p class="hint" style="color:var(--green-ink);font-weight:700;margin-bottom:8px">Code filled in from your link. Tap Join to link this device.</p>`:""}
-    <input class="inp" id="code" value="${PENDING_JOIN?fmtCode(PENDING_JOIN):""}" placeholder="XXXX-XXXX-XXXX" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false">
+    <input class="inp" id="code" placeholder="XXXX-XXXX-XXXX" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false">
     <button class="ghost" id="join" style="margin-top:12px">Join with this code</button>
     <div class="warn" id="fmsg" aria-live="polite"></div>`;
     $("#back").onclick=home;
