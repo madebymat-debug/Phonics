@@ -1295,6 +1295,10 @@ function genCode(){const a=new Uint32Array(12);crypto.getRandomValues(a);return 
 const normCode=c=>c.toUpperCase().replace(/[^A-Z0-9]/g,"");
 const fmtCode=c=>c.match(/.{1,4}/g).join("-");
 
+function joinLink(){return location.origin+location.pathname+"?join="+S.family}
+let PENDING_JOIN=null;
+(()=>{try{const j=new URLSearchParams(location.search).get("join");
+  if(j){PENDING_JOIN=normCode(j); history.replaceState(null,"",location.pathname)}}catch(e){}})();
 function familyScreen(){
   VIEW=familyScreen; CUR=null;
   if(!S.family){
@@ -1305,7 +1309,8 @@ function familyScreen(){
     <h3 class="ghead">First phone</h3>
     <button class="go" id="create">Start family sync</button>
     <h3 class="ghead">Already started on another phone?</h3>
-    <input class="inp" id="code" placeholder="XXXX-XXXX-XXXX" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false">
+    ${PENDING_JOIN?`<p class="hint" style="color:var(--green-ink);font-weight:700;margin-bottom:8px">Code filled in from your link. Tap Join to link this device.</p>`:""}
+    <input class="inp" id="code" value="${PENDING_JOIN?fmtCode(PENDING_JOIN):""}" placeholder="XXXX-XXXX-XXXX" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false">
     <button class="ghost" id="join" style="margin-top:12px">Join with this code</button>
     <div class="warn" id="fmsg" aria-live="polite"></div>`;
     $("#back").onclick=home;
@@ -1317,26 +1322,29 @@ function familyScreen(){
       try{
         const r=await rpc("get_family",{p_code:c});
         if(!r){msg.style.color="";msg.textContent="Code not found. Check it and try again.";return}
-        S.family=c; save(); await syncNow(); familyScreen();
+        S.family=c; PENDING_JOIN=null; save(); await syncNow(); familyScreen();
       }catch(e){msg.style.color="";msg.textContent="Couldn't connect ("+String(e&&e.message||e)+"). Check your signal and try again."}
     };
   } else {
     app.innerHTML=`
     <div class="bar"><button class="back" id="back">‹ Home</button></div>
     <h1 class="title">Family sync</h1>
-    <p class="hint">On. Enter this code on the other phone to link it.</p>
+    <p class="hint">On. Share the link, or enter this code on another device to link it.</p>
+    ${PENDING_JOIN&&PENDING_JOIN!==S.family?`<p class="warn" style="text-align:left">That link is for a different family code. Tap "Stop syncing on this phone" first if you want to switch.</p>`:""}
     <div class="codebox">${fmtCode(S.family)}</div>
     <p class="hint" id="syncstat" style="text-align:center;margin-top:10px">${lastSyncText()}</p>
     <div class="stack" style="margin-top:20px">
-      <button class="go" id="share">Share code</button>
+      <button class="go" id="share">Share link</button>
+      <button class="ghost" id="copy">Copy link</button>
       <button class="ghost" id="now">Sync now</button>
     </div>
     <div class="foot"><button class="link" id="off">Stop syncing on this phone</button></div>`;
     $("#back").onclick=home;
     $("#share").onclick=async()=>{
-      const text="Phonics app family code: "+fmtCode(S.family);
-      try{ if(navigator.share) await navigator.share({text}); else {await navigator.clipboard.writeText(fmtCode(S.family)); $("#share").textContent="Copied!"} }catch(e){}
+      const url=joinLink(), text="Tap to open Dylan's Phonics and join our family sync (code "+fmtCode(S.family)+")";
+      try{ if(navigator.share) await navigator.share({title:"Dylan's Phonics",text,url}); else {await navigator.clipboard.writeText(url); $("#share").textContent="Link copied!"} }catch(e){}
     };
+    $("#copy").onclick=async()=>{try{await navigator.clipboard.writeText(joinLink()); $("#copy").textContent="Copied!"}catch(e){}};
     $("#now").onclick=syncNow;
     $("#off").onclick=()=>{if(confirm("Stop syncing on this phone? Everything stays on this phone, it just stops sharing.")){S.family=null;SYNC.state="off";save();familyScreen()}};
   }
@@ -1349,6 +1357,7 @@ setTimeout(syncNow,600);
 if(!S.tInit){checkTrophies(); S.tInit=1; save()}
 applyKid();
 home();
+if(PENDING_JOIN&&PENDING_JOIN!==S.family) familyScreen();
 if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))}
 </script>
 </body>
