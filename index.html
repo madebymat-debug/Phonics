@@ -646,13 +646,14 @@ function stickerCounts(){const c={};S.stickers.forEach(x=>c[x.e]=(c[x.e]||0)+1);
 function awardSticker(meta){
   const c=stickerCounts(), roll=Math.random();
   let tier=roll<RARITY.g?"g":roll<RARITY.g+RARITY.r?"r":"c", e=null;
-  const sp=activeSeason();
-  if(sp&&Math.random()<0.5){
-    // half of in-season sessions try for a seasonal sticker the child doesn't have yet
-    const fresh=t=>sp[t].filter(x=>!c[x]);
-    const want=fresh(tier), any=[...fresh("c"),...fresh("r"),...fresh("g")];
-    const from=want.length?want:any;
-    if(from.length){e=from[Math.floor(Math.random()*from.length)]; tier=STICKER_INFO[e].tier}
+  const sp=activeSeason(), pick=a=>a[Math.floor(Math.random()*a.length)];
+  if(sp){
+    // Seasonal stickers follow the same rarity as everything else.
+    // 1 in 3 sessions: a seasonal sticker of the rolled rarity he doesn't have yet.
+    // Once the whole seasonal page is collected, 1 in 6 sessions: a repeat towards a seasonal shiny.
+    const freshT=sp[tier].filter(x=>!c[x]), pageDone=[...sp.c,...sp.r,...sp.g].every(x=>c[x]);
+    if(freshT.length&&Math.random()<1/3) e=pick(freshT);
+    else if(pageDone){const dup=sp[tier].filter(x=>(c[x]||0)<3); if(dup.length&&Math.random()<1/6) e=pick(dup)}
   }
   if(!e){
     const pool=TIER[tier], fresh=pool.filter(x=>!c[x]), notShiny=pool.filter(x=>(c[x]||0)<3);
