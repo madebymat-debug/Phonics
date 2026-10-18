@@ -9,7 +9,6 @@
 <meta name="apple-mobile-web-app-title" content="Phonics">
 <meta name="theme-color" content="#FFF3C4">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -161,6 +160,7 @@ button:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
 .pill{flex:none;font-size:.95rem;font-weight:700;padding:4px 12px;border-radius:999px;border:2px solid var(--edge);background:var(--soft)}
 .pill[data-s="ok"],.pill[data-s="idle"]{background:var(--green);color:#fff}
 .pill[data-s="error"]{background:var(--orange);color:#fff}
+.tip{margin-top:14px;background:var(--card);border:2px dashed var(--edge);border-radius:14px;padding:10px 12px;color:var(--ink)}
 .codebox{margin-top:22px;text-align:center;white-space:nowrap;font-size:clamp(1.4rem,7.4vw,2.4rem);font-weight:700;letter-spacing:.06em;
   background:var(--card);border:3px solid var(--edge);border-radius:20px;box-shadow:0 5px 0 var(--edge);padding:18px 10px;user-select:all}
 /* Insights */
@@ -366,7 +366,9 @@ S.group=S.group||"From school"; S.addType=S.addType||"green";
 S.h=S.h&&typeof S.h==="object"?S.h:{};
 S.stickers=Array.isArray(S.stickers)?S.stickers:[]; S.kid=!!S.kid; S.trophies=S.trophies&&typeof S.trophies==="object"?S.trophies:{};
 S.deleted=S.deleted&&typeof S.deleted==="object"?S.deleted:{}; S.resetAt=S.resetAt||0; // [{e:emoji,t:time}] // history: {id:{g:gotCount,a:againCount,t:lastTime}}
-function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){} stampURL()}
+// Keep the family code in the page address, so a home-screen copy made from Safari links itself
+function stampURL(){try{const q=S.family?"?fam="+S.family:""; if(location.search!==q&&!new URLSearchParams(location.search).get("join")) history.replaceState(null,"",location.pathname+q)}catch(e){}}
 
 // ---------- Items ----------
 let ALL={}, ITEMS={};
@@ -1298,8 +1300,12 @@ const fmtCode=c=>c.match(/.{1,4}/g).join("-");
 
 function joinLink(){return location.origin+location.pathname+"?join="+S.family}
 let PENDING_JOIN=null;
-(()=>{try{const j=new URLSearchParams(location.search).get("join");
-  if(j){PENDING_JOIN=normCode(j); history.replaceState(null,"",location.pathname)}}catch(e){}})();
+(()=>{try{const q=new URLSearchParams(location.search), j=q.get("join"), f=q.get("fam");
+  if(j){PENDING_JOIN=normCode(j); history.replaceState(null,"",location.pathname)}
+  // Opened with a saved family code (e.g. a home-screen copy): link automatically,
+  // unless syncing was deliberately stopped on this device
+  if(f&&!S.family&&!S.famOff){S.family=normCode(f); SYNC.state="idle"}
+  save();}catch(e){}})();
 function familyScreen(){
   VIEW=familyScreen; CUR=null;
   if(!S.family&&PENDING_JOIN){
@@ -1318,7 +1324,7 @@ function familyScreen(){
       try{
         const r=await rpc("get_family",{p_code:c});
         if(!r){msg.style.color="";msg.textContent="That link doesn't seem to work. Ask for a new one.";$("#join1").disabled=false;return}
-        S.family=c; PENDING_JOIN=null; save(); await syncNow(); familyScreen();
+        S.family=c; S.famOff=false; PENDING_JOIN=null; save(); await syncNow(); familyScreen();
       }catch(e){msg.style.color="";msg.textContent="Couldn't connect ("+String(e&&e.message||e)+"). Check the internet connection and try again.";$("#join1").disabled=false}
     };
   } else if(!S.family){
@@ -1333,7 +1339,7 @@ function familyScreen(){
     <button class="ghost" id="join" style="margin-top:12px">Join with this code</button>
     <div class="warn" id="fmsg" aria-live="polite"></div>`;
     $("#back").onclick=home;
-    $("#create").onclick=async()=>{S.family=genCode();save();$("#create").disabled=true;await syncNow();familyScreen()};
+    $("#create").onclick=async()=>{S.family=genCode();S.famOff=false;save();$("#create").disabled=true;await syncNow();familyScreen()};
     $("#join").onclick=async()=>{
       const c=normCode($("#code").value), msg=$("#fmsg");
       if(c.length!==12){msg.textContent="Codes are 12 letters and numbers";return}
@@ -1341,7 +1347,7 @@ function familyScreen(){
       try{
         const r=await rpc("get_family",{p_code:c});
         if(!r){msg.style.color="";msg.textContent="Code not found. Check it and try again.";return}
-        S.family=c; PENDING_JOIN=null; save(); await syncNow(); familyScreen();
+        S.family=c; S.famOff=false; PENDING_JOIN=null; save(); await syncNow(); familyScreen();
       }catch(e){msg.style.color="";msg.textContent="Couldn't connect ("+String(e&&e.message||e)+"). Check your signal and try again."}
     };
   } else {
@@ -1352,6 +1358,7 @@ function familyScreen(){
     ${PENDING_JOIN&&PENDING_JOIN!==S.family?`<p class="warn" style="text-align:left">That link is for a different family code. Tap "Stop syncing on this phone" first if you want to switch.</p>`:""}
     <div class="codebox">${fmtCode(S.family)}</div>
     <p class="hint" id="syncstat" style="text-align:center;margin-top:10px">${lastSyncText()}</p>
+    ${!(navigator.standalone||matchMedia("(display-mode: standalone)").matches)?`<p class="hint tip">📱 On iPhone? Add the app to your Home Screen from this page (Share › Add to Home Screen) and it will stay linked.</p>`:""}
     <div class="stack" style="margin-top:20px">
       <button class="go" id="share">Share link</button>
       <button class="ghost" id="copy">Copy link</button>
@@ -1365,7 +1372,7 @@ function familyScreen(){
     };
     $("#copy").onclick=async()=>{try{await navigator.clipboard.writeText(joinLink()); $("#copy").textContent="Copied!"}catch(e){}};
     $("#now").onclick=syncNow;
-    $("#off").onclick=()=>{if(confirm("Stop syncing on this phone? Everything stays on this phone, it just stops sharing.")){S.family=null;SYNC.state="off";save();familyScreen()}};
+    $("#off").onclick=()=>{if(confirm("Stop syncing on this phone? Everything stays on this phone, it just stops sharing.")){S.family=null;S.famOff=true;SYNC.state="off";save();familyScreen()}};
   }
 }
 window.addEventListener("online",syncNow);
