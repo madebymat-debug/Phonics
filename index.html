@@ -353,8 +353,10 @@ SCHOOL.red.pk=["all", "my", "like", "I've", "the", "want", "you", "call", "we", 
 
 
 // Which sound sets each school reading group uses
-const LEVEL_SETS = {dt:"Set 1",rd:"Set 1",gr:"Sets 1–2",pu:"Set 1",pk:"Sets 1–2"};
-const LEVEL_NAMES = {pu:"Purple",pk:"Pink",y1:"Year 1 list",dt:"Ditty",rd:"Red Ditty",gr:"Green",s1:"Set 1",sf:"Special friends",s2:"Set 2",s3:"Set 3",all:"All red words"};
+// Seasonal word sets: shown only while their season is on (same dates as the sticker pages)
+const SEASON_WORDS = {"halloween": {"green": {"hw_rd": ["b a t", "c a t", "r a t", "h a t", "w e b", "w i g", "p o t", "b a g", "f o g", "b u g", "m u d", "m o th", "f a ng", "h i ss", "f i zz", "m a s k", "s p e ll", "b l a ck"], "hw_gr": ["w i tch", "t r i ck", "s p e ll s", "f a ng s", "w e b s", "b a t s", "c r u n ch", "s c r a tch", "s n i ff", "sh o ck", "s n a p", "f l i ck", "d r i p", "th u d", "b u m p", "c l a n k", "g u l p"], "hw_pu": ["p u m p k i n", "p u m p k i n s", "g o b l i n", "g o b l i n s", "h o b g o b l i n", "c o b w e b", "c o b w e b s", "w i tch e s", "c r a ck l i ng", "z i g z a g", "s u n s e t", "b a n d i t"], "hw_pk": ["n igh t", "m i d n igh t", "m oo n l igh t", "f r igh t", "t igh t", "m oo n", "b oo", "s p oo k", "b r oo m", "g l oo m", "h oo t", "z oo m", "c r ee p", "s c r ee ch", "t ee th", "s w ee t s", "g l ow", "sh a d ow"]}, "alien": {"hw_al": ["g r o b", "z i m p", "v o sh", "b l u g", "s k e ck", "th r u m", "w u ng", "c r i nk"]}}};
+const LEVEL_SETS = {dt:"Set 1",rd:"Set 1",gr:"Sets 1–2",pu:"Set 1",pk:"Sets 1–2",hw_rd:"Set 1",hw_gr:"Set 1",hw_pu:"Set 1",hw_pk:"Sets 1–2",hw_al:"Set 1"};
+const LEVEL_NAMES = {hw_rd:"🎃 Red Ditty",hw_gr:"🎃 Green",hw_pu:"🎃 Purple",hw_pk:"🎃 Pink",hw_al:"🎃 Spooky",pu:"Purple",pk:"Pink",y1:"Year 1 list",dt:"Ditty",rd:"Red Ditty",gr:"Green",s1:"Set 1",sf:"Special friends",s2:"Set 2",s3:"Set 3",all:"All red words"};
 const ACTS = {
   sounds:{name:"Speed Sounds",desc:"Say the sound on the card",sw:"var(--blue)",icon:"sh",levels:["s1","sf","s2","s3"],
     help:"Show the card. He says the sound, not the letter name."},
@@ -393,6 +395,8 @@ function buildItems(){
   ITEMS.red.y1=Y1.map(w=>add({id:"red:"+w,mode:"red",w}));
   for (const k in SCHOOL) for (const lv in SCHOOL[k])
     ITEMS[k][lv]=SCHOOL[k][lv].map(x=>add(k==="red"?{id:"red:"+x,mode:"red",w:x}:{id:k+":"+x,mode:k,str:x}));
+  for (const sid in SEASON_WORDS) for (const k in SEASON_WORDS[sid]) for (const lv in SEASON_WORDS[sid][k])
+    ITEMS[k][lv]=SEASON_WORDS[sid][k][lv].map(x=>add({id:k+":"+x,mode:k,str:x}));
   S.custom.forEach(c=>{
     const lv="c:"+c.g, it=c.t==="red"?{id:"red:"+c.s,mode:"red",w:c.s}:{id:c.t+":"+c.s,mode:c.t,str:c.s};
     (ITEMS[c.t][lv]=ITEMS[c.t][lv]||[]).push(add(it));
@@ -401,8 +405,9 @@ function buildItems(){
 function levelsFor(k){
   const base=[...(ACTS[k].school||[]),...ACTS[k].levels];
   const extra=k==="sounds"?[]:[...new Set(S.custom.filter(c=>c.t===k).map(c=>"c:"+c.g))];
-  return [...base,...extra];
+  return [...base,...seasonLevels(k),...extra];
 }
+function seasonLevels(k){const sp=activeSeason(); return sp&&SEASON_WORDS[sp.id]&&SEASON_WORDS[sp.id][k]?Object.keys(SEASON_WORDS[sp.id][k]):[]}
 function levelName(l){return l.startsWith("c:")?l.slice(2):LEVEL_NAMES[l]}
 function againList(){return Object.keys(S.p).filter(id=>S.p[id]==="again"&&ALL[id]).map(id=>ALL[id])}
 buildItems();
@@ -885,7 +890,7 @@ function setup(k){
     <div class="bar"><button class="back" id="back">‹ Home</button></div>
     <h1 class="title">${a.name}</h1>
     <p class="hint">${a.help}</p>
-    ${[["From school",a.school||[]],[k==="sounds"?"Sound sets":"Extra practice",a.levels],["Your words",lvls.filter(l=>l.startsWith("c:"))]]
+    ${[["From school",a.school||[]],[activeSeason()?activeSeason().icon+" "+activeSeason().name+" words":"",seasonLevels(k)],[k==="sounds"?"Sound sets":"Extra practice",a.levels],["Your words",lvls.filter(l=>l.startsWith("c:"))]]
       .filter(([,ls])=>ls.length).map(([h,ls])=>`<h3 class="ghead">${h}</h3>
       <div class="chips">${ls.map(l=>`<button class="chip" data-l="${esc(l)}" aria-pressed="${sel.includes(l)}">${esc(levelName(l))}${LEVEL_SETS[l]?`<span class="cset">${LEVEL_SETS[l]}</span>`:""}</button>`).join("")}</div>`).join("")}
     <div style="height:14px"></div>
