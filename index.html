@@ -222,14 +222,16 @@ body.kid .kid-badge{display:inline-block;margin-top:6px;font-weight:700;color:va
   animation:holo 6s linear infinite,shinyglow 1.8s ease-in-out infinite alternate}
 @keyframes holo{0%{background-position:0% 50%}100%{background-position:300% 50%}}
 @keyframes shinyglow{from{box-shadow:0 3px 0 var(--edge),0 0 8px 2px rgba(255,210,63,.75)}to{box-shadow:0 3px 0 var(--edge),0 0 18px 6px rgba(255,61,154,.6)}}
-.slot.shiny .sheen{position:absolute;inset:0;border-radius:13px;overflow:hidden;pointer-events:none}
-.slot.shiny .sheen::before{content:"";position:absolute;top:-60%;left:-70%;width:45%;height:220%;
-  background:linear-gradient(90deg,transparent,rgba(255,255,255,.9),transparent);transform:rotate(25deg);animation:sheen 2.6s ease-in-out infinite}
-@keyframes sheen{0%{left:-70%}60%,100%{left:130%}}
-.slot.shiny .sheen::after{content:"✨";position:absolute;right:3px;bottom:2px;font-size:.75rem;animation:twinkle 1.6s ease-in-out .8s infinite}
-.slot.shiny::after{content:"✨";position:absolute;left:-8px;top:-10px;font-size:1.1rem;animation:twinkle 1.6s ease-in-out infinite;z-index:2}
 .slot.shiny.wig{animation:wig .5s ease,holo 6s linear infinite}
 .pop.shiny{background:linear-gradient(120deg,#FFD1EC,#D4F0FF,#FFF6C8,#D8FFD9,#E8D4FF,#FFD1EC);background-size:300% 300%;animation:popin .45s cubic-bezier(.2,1.4,.4,1),holo 5s linear infinite}
+.slot.shiny .sheen{position:absolute;inset:0;border-radius:13px;overflow:hidden;clip-path:inset(0 round 13px);pointer-events:none}
+.slot.shiny .sheen::before{content:"";position:absolute;top:-50%;left:0;width:45%;height:200%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.9),transparent);transform:translateX(-160%) rotate(25deg);opacity:0}
+.slot.shiny .sheen.sweep::before{animation:sheen var(--d,1s) ease-in-out forwards}
+@keyframes sheen{0%{transform:translateX(-160%) rotate(25deg);opacity:1}100%{transform:translateX(320%) rotate(25deg);opacity:1}}
+.spark{position:absolute;pointer-events:none;z-index:3;line-height:1;filter:drop-shadow(0 0 3px #fff) drop-shadow(0 0 7px #FFD23F);
+  animation:spark var(--sd,1s) ease-out forwards}
+@keyframes spark{0%{transform:scale(0) rotate(0);opacity:0}30%{transform:scale(1.25) rotate(25deg);opacity:1}100%{transform:scale(0) rotate(70deg);opacity:0}}
 @keyframes twinkle{0%,100%{transform:scale(.8);opacity:.6}50%{transform:scale(1.15) rotate(15deg);opacity:1}}
 .slot.empty.locked{opacity:.45;font-size:1.2rem}
 .season{margin:-4px 0 10px;font-weight:700;color:var(--muted);font-size:.95rem}
@@ -992,6 +994,20 @@ function dayLabel(ts){
 }
 function chip(it,extra){return `<span class="wchip ro ${it.mode}">${esc(wordText(it))}${extra||""}</span>`}
 let SB_TAB="stickers";
+// Shiny stickers: shine sweeps and sparkles at random moments
+function shinyFX(){app.querySelectorAll(".slot.shiny").forEach(el=>{schedSheen(el);schedSpark(el)})}
+function schedSheen(el){setTimeout(()=>{
+  if(!document.body.contains(el)) return; const sh=el.querySelector(".sheen"); if(!sh) return;
+  sh.style.setProperty("--d",(0.5+Math.random()*0.9).toFixed(2)+"s");
+  sh.classList.remove("sweep"); void sh.offsetWidth; sh.classList.add("sweep"); schedSheen(el);
+},1200+Math.random()*4800)}
+function schedSpark(el){setTimeout(()=>{
+  if(!document.body.contains(el)) return;
+  const sp=document.createElement("span"); sp.className="spark"; sp.textContent=Math.random()<.75?"✨":"⭐"; sp.setAttribute("aria-hidden","true");
+  sp.style.left=(-12+Math.random()*92)+"%"; sp.style.top=(-18+Math.random()*90)+"%";
+  sp.style.fontSize=(1.1+Math.random()*0.8).toFixed(2)+"rem"; sp.style.setProperty("--sd",(0.7+Math.random()*0.7).toFixed(2)+"s");
+  sp.addEventListener("animationend",()=>sp.remove()); el.appendChild(sp); schedSpark(el);
+},350+Math.random()*2000)}
 function stickerBook(){
   VIEW=stickerBook; CUR=null;
   const c=stickerCounts(), n=Object.keys(c).filter(e=>STICKER_INFO[e]).length;
@@ -1032,6 +1048,7 @@ function stickerBook(){
   app.querySelectorAll("button.slot").forEach(b=>b.onclick=()=>{
     b.classList.remove("wig"); void b.offsetWidth; b.classList.add("wig"); stickerSound(b.dataset.e);
   });
+  shinyFX();
 }
 // ---------- Insights: which sounds / word types he finds harder ----------
 function featuresOf(it){
