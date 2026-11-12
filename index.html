@@ -62,7 +62,7 @@ button:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
 .act{display:flex;align-items:center;gap:16px;width:100%;text-align:left;background:var(--c,var(--card));color:#fff;border-radius:22px;padding:14px 16px}
 .act[data-act=sounds]{--c:var(--blue)} .act[data-act=green]{--c:var(--green)}
 .act[data-act=red]{--c:var(--red)} .act[data-act=alien]{--c:var(--alien)}
-.again-row{--c:var(--orange)} #prog{--c:var(--pink)} #stk{--c:#E89A00} #addw{--c:var(--teal)}
+.again-row{--c:var(--orange)} .act[data-act=y1]{--c:#4F46E5} #prog{--c:var(--pink)} #stk{--c:#E89A00} #addw{--c:var(--teal)}
 .act .sw{flex:none;width:56px;height:56px;border-radius:16px;display:grid;place-items:center;font-weight:700;
   background:rgba(255,255,255,.24)!important;color:#fff!important}
 .act h2{margin:0;font-size:1.35rem}
@@ -217,6 +217,13 @@ body.kid .kid-only{display:block}
 @keyframes shake{0%,100%{transform:none}20%,60%{transform:translateX(-10px)}40%,80%{transform:translateX(10px)}}
 .kid-badge{display:none}
 body.kid .kid-badge{display:inline-block;margin-top:6px;font-weight:700;color:var(--muted)}
+/* Spelling */
+[hidden]{display:none!important}
+.spell-q{font-size:5rem;line-height:1;opacity:.85}
+.peek{position:absolute;top:14px;left:0;right:0;text-align:center;font-size:1.3rem;color:var(--muted);min-height:1.6em}
+.peek b{color:var(--ink);font-size:1.6rem}
+#peek{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:none}
+.wchip.spell{color:#4F46E5}
 /* Rewards */
 .sgrid .slot.shiny{border-color:#FF3D9A;background:linear-gradient(90deg,#FFD1EC,#D4F0FF,#FFF6C8,#D8FFD9,#E8D4FF,#FFD1EC);background-size:320px 100%;background-repeat:repeat-x;
   animation:holo 6s linear infinite,shinyglow 1.8s ease-in-out infinite alternate}
@@ -375,6 +382,7 @@ const ACTS = {
     help:"Tap the word to step through each sound, then tap again to read the whole word. Dots are single sounds, dashes are special friends."},
   alien:{name:"Nonsense words",desc:"Made-up words to sound out",sw:"var(--alien)",icon:"zib",school:["dt","rd","gr","pu","pk"],levels:["s1","s2","s3"],
     help:"Nonsense words, so he has to sound them out rather than guess."},
+  y1:{name:"Year 1 words",desc:"Read and spell the must-know words",sw:"#4F46E5",icon:"⭐",levels:[],home:1},
   red:{name:"Red words",desc:"Tricky words he just has to know",sw:"var(--red)",icon:"the",school:["dt","rd","gr","pu","pk"],levels:["y1","all"],
     help:"No sounding out. He just needs to know these on sight."}
 };
@@ -397,13 +405,14 @@ function stampURL(){try{const q=S.family?"?fam="+S.family:""; if(location.search
 // ---------- Items ----------
 let ALL={}, ITEMS={};
 function buildItems(){
-  ALL={}; ITEMS={sounds:{},green:{},alien:{},red:{}};
+  ALL={}; ITEMS={sounds:{},green:{},alien:{},red:{},spell:{}};
   const add=it=>(ALL[it.id]=it);
   for (const lv in SOUNDS) ITEMS.sounds[lv]=SOUNDS[lv].map(([g,h])=>add({id:"sounds:"+g+"|"+h,mode:"sounds",g,hint:h}));
   for (const lv in GREEN) ITEMS.green[lv]=GREEN[lv].map(s=>add({id:"green:"+s,mode:"green",str:s}));
   for (const lv in ALIEN) ITEMS.alien[lv]=ALIEN[lv].map(s=>add({id:"alien:"+s,mode:"alien",str:s}));
   ITEMS.red.all=RED.map(w=>add({id:"red:"+w,mode:"red",w}));
   ITEMS.red.y1=Y1.map(w=>add({id:"red:"+w,mode:"red",w}));
+  ITEMS.spell.y1=Y1.map(w=>add({id:"spell:"+w,mode:"spell",w}));
   for (const k in SCHOOL) for (const lv in SCHOOL[k])
     ITEMS[k][lv]=SCHOOL[k][lv].map(x=>add(k==="red"?{id:"red:"+x,mode:"red",w:x}:{id:k+":"+x,mode:k,str:x}));
   for (const sid in SEASON_WORDS) for (const k in SEASON_WORDS[sid]) for (const lv in SEASON_WORDS[sid][k])
@@ -488,7 +497,7 @@ function parse(str){
   });
   return {tokens,sounds,splits:sounds.filter(s=>s.length===2)};
 }
-function wordText(it){return it.mode==="sounds"?it.g:it.mode==="red"?it.w:it.str.replace(/[_ ]/g,"")}
+function wordText(it){return it.mode==="sounds"?it.g:it.w?it.w:it.str.replace(/[_ ]/g,"")}
 function wordHTML(str,mode,cls){
   const {tokens}=parse(str);
   return `<div class="word ${mode} ${cls||""}">${tokens.map((t,i)=>`<span class="gp" data-i="${i}"><span class="l">${esc(t.g)}</span><span class="mk ${t.kind}"></span></span>`).join("")}<svg class="arcs" width="0" height="0"></svg></div>`;
@@ -725,7 +734,8 @@ function trophyDefs(){
     {id:"snd1",icon:"🔤",name:"Set 1 sounds",desc:"Knows every Set 1 Speed Sound",check:()=>allGot(ITEMS.sounds.s1)},
     {id:"snd2",icon:"🔠",name:"Set 2 sounds",desc:"Knows every Set 2 Speed Sound",check:()=>allGot(ITEMS.sounds.s2)},
     {id:"snd3",icon:"🏅",name:"Set 3 sounds",desc:"Knows every Set 3 Speed Sound",check:()=>allGot(ITEMS.sounds.s3),special:1},
-    {id:"y1",icon:"🧠",name:"Year 1 tricky words",desc:"Knows all 45 Year 1 exception words",check:()=>allGot(ITEMS.red.y1),special:1}
+    {id:"y1",icon:"🧠",name:"Year 1 tricky words",desc:"Knows all 45 Year 1 exception words",check:()=>allGot(ITEMS.red.y1),special:1},
+    {id:"y1spell",icon:"✏️",name:"Year 1 speller",desc:"Can spell all 45 Year 1 exception words",check:()=>allGot(ITEMS.spell.y1),special:1}
   ];
   for(const lv in SCHOOL.green) T.push({id:"pack_"+lv,icon:"🎒",name:LEVEL_NAMES[lv]+" pack",desc:"Got every "+LEVEL_NAMES[lv]+" green word",check:()=>allGot(ITEMS.green[lv])});
   const c=stickerCounts();
@@ -820,6 +830,23 @@ function gate(onPass){
   newQ(); draw(); document.body.appendChild(bg);
 }
 
+// Year 1 exception words: read them (red-word style) or spell them
+function y1Screen(){
+  VIEW=y1Screen; CUR=null;
+  app.innerHTML=`
+  <div class="bar"><button class="back" id="back">‹ Home</button></div>
+  <h1 class="title">⭐ Year 1 words</h1>
+  <p class="hint">The ${Y1.length} words children in England are expected to read and spell by the end of Year 1. Many don't follow the usual sound rules, so no Fred Talk.</p>
+  <div class="stack" style="margin-top:22px">
+    <button class="go" id="y1read" style="background:var(--red)">👀 Read them</button>
+    <button class="go" id="y1spell" style="background:#4F46E5">✏️ Spell them</button>
+  </div>
+  <p class="hint" style="margin-top:18px"><b>Spelling:</b> hold <b>Peek</b> to see the word, say it to him, he writes it down, then tap the card to check.</p>`;
+  $("#back").onclick=home;
+  $("#y1read").onclick=()=>start(ITEMS.red.y1,"Year 1 words");
+  $("#y1spell").onclick=()=>start(ITEMS.spell.y1,"Year 1 spelling");
+  window.scrollTo(0,0);
+}
 function home(){
   P=null; CUR=null; VIEW=home;
   const n=againList().length;
@@ -884,7 +911,7 @@ function home(){
     </button>
   </div>
   <div class="foot kid-only"><button class="link" id="grown">🔒 Grown-ups</button></div>`;
-  app.querySelectorAll("[data-act]").forEach(b=>b.onclick=()=>S.kid?kidStart(b.dataset.act):setup(b.dataset.act));
+  app.querySelectorAll("[data-act]").forEach(b=>b.onclick=()=>{const k=b.dataset.act; if(k==="y1") return S.kid?start(ITEMS.red.y1,"Year 1 words"):y1Screen(); S.kid?kidStart(k):setup(k)});
   const ag=app.querySelector("[data-again]"); if(ag) ag.onclick=()=>start(againList(),"Practise again");
   $("#addw").onclick=addScreen;
   $("#sfx").onclick=()=>{S.sfx=!S.sfx;save();if(S.sfx)SFX.got();
@@ -1123,7 +1150,7 @@ function progressScreen(){
   <div class="psec">
     <h2>Still tricky (${again.length})</h2>
     <p class="hint">Last marked "again later". They drop off this list once he gets them right.</p>
-    ${again.length?`<div class="wlist">${order.flatMap(m=>again.filter(it=>it.mode===m)).map(it=>chip(it)).join("")}</div>
+    ${again.length?`<div class="wlist">${[...order,"spell"].flatMap(m=>again.filter(it=>it.mode===m)).map(it=>chip(it)).join("")}</div>
       <button class="go" id="practise" style="margin-top:16px">Practise these ${again.length}</button>`
       :`<p class="hint">${last?"Nothing tricky right now.":""}</p>`}
   </div>
@@ -1173,7 +1200,11 @@ function card(anim=true){
   const it=P.deck[P.i];
   const pct=(P.i/P.deck.length)*100;
   let body="",tappable=false;
-  if(it.mode==="sounds"){
+  if(it.mode==="spell"){
+    body=`<div class="peek" id="peekw" aria-live="polite"></div><div class="spell-q" id="sq" aria-hidden="true">✏️</div>
+      <div class="word red" id="sw" hidden><span class="gp"><span class="l">${esc(it.w)}</span></span></div>
+      <div class="step" id="sstep">Say the word. He writes it down.</div>`;
+  } else if(it.mode==="sounds"){
     body=`<div class="big${/^[a-z]-e$/.test(it.g)?" split":""}">${esc(it.g)}</div><div class="ex">as in ${esc(it.hint)}</div>`;
   } else if(it.mode==="red"){
     body=`${CHAR.red}<div class="word red"><span class="gp"><span class="l">${esc(it.w)}</span></span></div>`;
@@ -1186,6 +1217,7 @@ function card(anim=true){
     <div class="bar"><button class="back" id="back">‹ Stop</button><span class="count">${P.i+1} of ${P.deck.length}</span></div>
     <div class="prog"><i style="width:${pct}%"></i></div>
     <div class="stage m-${it.mode} ${tappable?"tap":""} ${P.trickyIds.has(it.id)?"is-tricky":""} ${anim?"slide":""}" id="stage" ${tappable?'role="button" tabindex="0" aria-label="Next sound"':""}>${body}</div>
+    ${it.mode==="spell"?`<div class="tools"><button class="toggle" id="peek">👀 Hold to peek</button></div>`:""}
     ${tappable?`<div class="tools"><button class="toggle" id="head" aria-pressed="${S.head}">Hide sound buttons</button></div>`:""}
     ${S.kid?`<div class="marks kidm"><button class="mbtn got" id="next">Next ➜</button></div>`:`<div class="marks">
       <button class="mbtn again" id="again">Again later</button>
@@ -1195,6 +1227,14 @@ function card(anim=true){
   if(S.kid) $("#next").onclick=()=>{P.i++; if(P.i>=P.deck.length) finish(); else {SFX.step(P.i); card()}};
   else {$("#again").onclick=()=>mark("again"); $("#got").onclick=()=>mark("got")}
   fit($("#stage").querySelector(".word,.big"),it.mode==="sounds"?240:200);
+  if(it.mode==="spell"){
+    const stage=$("#stage"), pw=$("#peekw"), pk=$("#peek"); stage.classList.add("tap");
+    stage.onclick=()=>{ if(!$("#sw").hidden) return; $("#sq").hidden=true; $("#sw").hidden=false;
+      fit($("#sw"),200); $("#sstep").textContent="Did he spell it right?"; SFX.blend(); };
+    const show=e=>{e.preventDefault(); pw.innerHTML="Say: <b>"+esc(it.w)+"</b>"}, hide=()=>{pw.textContent=""};
+    pk.addEventListener("pointerdown",show); ["pointerup","pointerleave","pointercancel"].forEach(ev=>pk.addEventListener(ev,hide));
+    pk.oncontextmenu=e=>e.preventDefault();
+  }
   if(tappable){
     const f=parse(it.str); let step=-1;
     const stage=$("#stage"),word=stage.querySelector(".word"),stepEl=$("#step");
