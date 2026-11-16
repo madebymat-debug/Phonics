@@ -223,7 +223,9 @@ body.kid .kid-badge{display:inline-block;margin-top:6px;font-weight:700;color:va
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .stage.m-y1{background:#24225A} :root:not([data-theme="light"]) .m-y1 .word.red .l{color:#A5B4FC}}
 :root[data-theme="dark"] .stage.m-y1{background:#24225A} :root[data-theme="dark"] .m-y1 .word.red .l{color:#A5B4FC}
 [hidden]{display:none!important}
-.spell-q{font-size:5rem;line-height:1;opacity:.85}
+.spell-q{display:flex;align-items:center;gap:4px}
+.spell-q .alien-pic{width:120px;height:120px}
+.spell-q .pencil{font-size:3.4rem;line-height:1;transform:rotate(-10deg)}
 .peek{position:absolute;top:14px;left:0;right:0;text-align:center;font-size:1.3rem;color:var(--muted);min-height:1.6em}
 .peek b{color:var(--ink);font-size:1.6rem}
 #peek{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:none}
@@ -579,7 +581,20 @@ const CHEEKY_SVG=`<svg class="alien-pic" viewBox="0 0 100 100" aria-hidden="true
 <path d="M55 58 Q62 51 69 58" stroke="#1B1F3B" stroke-width="3.5" fill="none" stroke-linecap="round"/>
 <path d="M37 70 Q50 84 63 70 Z" fill="#7F1D1D" stroke="#7F1D1D" stroke-width="2" stroke-linejoin="round"/>
 <ellipse cx="52" cy="76" rx="5" ry="3.2" fill="#FF8FB8"/></svg>`;
-const CHAR={green:SPROUT_SVG,red:CHEEKY_SVG,alien:ALIEN_SVG};
+const OWL_SVG=`<svg class="alien-pic" viewBox="0 0 100 100" aria-hidden="true">
+<path d="M27 34 L22 14 L40 27Z" fill="#4F46E5" stroke="#312E81" stroke-width="3" stroke-linejoin="round"/>
+<path d="M73 34 L78 14 L60 27Z" fill="#4F46E5" stroke="#312E81" stroke-width="3" stroke-linejoin="round"/>
+<ellipse cx="22" cy="64" rx="7" ry="13" fill="#4338CA" stroke="#312E81" stroke-width="3"/>
+<ellipse cx="78" cy="64" rx="7" ry="13" fill="#4338CA" stroke="#312E81" stroke-width="3"/>
+<ellipse cx="50" cy="59" rx="29" ry="31" fill="#6366F1" stroke="#312E81" stroke-width="3"/>
+<ellipse cx="50" cy="72" rx="17" ry="15" fill="#C7D2FE"/>
+<path d="M42 70 q4 3 8 0 q4 3 8 0 M44 78 q3 2 6 0 q3 2 6 0" stroke="#818CF8" stroke-width="2" fill="none" stroke-linecap="round"/>
+<circle cx="38" cy="49" r="11" fill="#fff" stroke="#FFD23F" stroke-width="3.5"/><circle cx="62" cy="49" r="11" fill="#fff" stroke="#FFD23F" stroke-width="3.5"/>
+<circle cx="40" cy="50" r="4.8" fill="#1B1F3B"/><circle cx="60" cy="50" r="4.8" fill="#1B1F3B"/>
+<circle cx="41.6" cy="48" r="1.6" fill="#fff"/><circle cx="61.6" cy="48" r="1.6" fill="#fff"/>
+<path d="M45.5 58 L54.5 58 L50 65Z" fill="#FF8A00" stroke="#B45309" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M40 89 l-3 5 M44 89 l0 5 M56 89 l0 5 M60 89 l3 5" stroke="#FF8A00" stroke-width="3" stroke-linecap="round"/></svg>`;
+const CHAR={green:SPROUT_SVG,red:CHEEKY_SVG,alien:ALIEN_SVG,y1:OWL_SVG};
 
 
 // ---------- Rewards: themed sticker pages with rarity, plus trophies ----------
@@ -1205,13 +1220,13 @@ function card(anim=true){
   const pct=(P.i/P.deck.length)*100;
   let body="",tappable=false;
   if(it.mode==="spell"){
-    body=`<div class="peek" id="peekw" aria-live="polite"></div><div class="spell-q" id="sq" aria-hidden="true">✏️</div>
+    body=`<div class="peek" id="peekw" aria-live="polite"></div><div class="spell-q" id="sq" aria-hidden="true">${CHAR.y1}<span class="pencil">✏️</span></div>
       <div class="word red" id="sw" hidden><span class="gp"><span class="l">${esc(it.w)}</span></span></div>
       <div class="step" id="sstep">Say the word. He writes it down.</div>`;
   } else if(it.mode==="sounds"){
     body=`<div class="big${/^[a-z]-e$/.test(it.g)?" split":""}">${esc(it.g)}</div><div class="ex">as in ${esc(it.hint)}</div>`;
   } else if(it.mode==="red"){
-    body=`${CHAR.red}<div class="word red"><span class="gp"><span class="l">${esc(it.w)}</span></span></div>`;
+    body=`${/^Year 1/.test(P.label||"")?CHAR.y1:CHAR.red}<div class="word red"><span class="gp"><span class="l">${esc(it.w)}</span></span></div>`;
   } else {
     tappable=true;
     body=`${CHAR[it.mode]||""}${wordHTML(it.str,it.mode,S.head?"head":"")}
