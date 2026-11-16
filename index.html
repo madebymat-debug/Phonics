@@ -218,6 +218,10 @@ body.kid .kid-only{display:block}
 .kid-badge{display:none}
 body.kid .kid-badge{display:inline-block;margin-top:6px;font-weight:700;color:var(--muted)}
 /* Spelling */
+.stage.m-y1{background:#E6E4FF}
+.m-y1 .word.red .l{color:#4338CA}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .stage.m-y1{background:#24225A} :root:not([data-theme="light"]) .m-y1 .word.red .l{color:#A5B4FC}}
+:root[data-theme="dark"] .stage.m-y1{background:#24225A} :root[data-theme="dark"] .m-y1 .word.red .l{color:#A5B4FC}
 [hidden]{display:none!important}
 .spell-q{font-size:5rem;line-height:1;opacity:.85}
 .peek{position:absolute;top:14px;left:0;right:0;text-align:center;font-size:1.3rem;color:var(--muted);min-height:1.6em}
@@ -1216,7 +1220,7 @@ function card(anim=true){
   app.innerHTML=`
     <div class="bar"><button class="back" id="back">‹ Stop</button><span class="count">${P.i+1} of ${P.deck.length}</span></div>
     <div class="prog"><i style="width:${pct}%"></i></div>
-    <div class="stage m-${it.mode} ${tappable?"tap":""} ${P.trickyIds.has(it.id)?"is-tricky":""} ${anim?"slide":""}" id="stage" ${tappable?'role="button" tabindex="0" aria-label="Next sound"':""}>${body}</div>
+    <div class="stage m-${it.mode}${/^Year 1/.test(P.label||"")?" m-y1":""} ${tappable?"tap":""} ${P.trickyIds.has(it.id)?"is-tricky":""} ${anim?"slide":""}" id="stage" ${tappable?'role="button" tabindex="0" aria-label="Next sound"':""}>${body}</div>
     ${it.mode==="spell"?`<div class="tools"><button class="toggle" id="peek">👀 Hold to peek</button></div>`:""}
     ${tappable?`<div class="tools"><button class="toggle" id="head" aria-pressed="${S.head}">Hide sound buttons</button></div>`:""}
     ${S.kid?`<div class="marks kidm"><button class="mbtn got" id="next">Next ➜</button></div>`:`<div class="marks">
